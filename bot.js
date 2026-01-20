@@ -4,7 +4,6 @@ import {
   SlashCommandBuilder,
   REST,
   Routes,
-  EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle
@@ -49,66 +48,86 @@ await rest.put(
 client.once("ready", () => {});
 
 client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-  if (interaction.user.id !== ADMIN_ID) {
-    return interaction.reply({ content: "Access denied.", ephemeral: true });
+  if (interaction.isChatInputCommand()) {
+    if (interaction.user.id !== ADMIN_ID) {
+      return interaction.reply({ content: "Access denied.", ephemeral: true });
+    }
+
+    if (interaction.commandName === "addvideo") {
+      const title = interaction.options.getString("title");
+      const youtube = interaction.options.getString("youtube");
+      const description = interaction.options.getString("description");
+      const linksRaw = interaction.options.getString("links");
+
+      const links = linksRaw ? linksRaw.split(",").map(l => l.trim()) : [];
+      const videos = await fs.readJson(DATA_FILE);
+      const code = Date.now().toString();
+
+      videos.push({
+        code,
+        name: title,
+        videoLink: youtube,
+        description,
+        developer: "MrMoundo",
+        description2: "",
+        links
+      });
+
+      await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
+
+      const buttons = links.map((link, i) =>
+        new ButtonBuilder()
+          .setCustomId(`link_${code}_${i}`)
+          .setLabel(`Download ${i + 1}`)
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      const rows = [];
+      if (buttons.length) {
+        rows.push(new ActionRowBuilder().addComponents(buttons.slice(0, 5)));
+      }
+
+      const channel = await client.channels.fetch(CHANNEL_ID);
+      if (channel) {
+        await channel.send({
+          content: `**${title}**\n${description}\n\n${youtube}`,
+          components: rows,
+          allowedMentions: { parse: [] }
+        });
+      }
+
+      return interaction.reply({
+        content: "Video published successfully.",
+        ephemeral: true
+      });
+    }
   }
 
-  if (interaction.commandName === "addvideo") {
-    const title = interaction.options.getString("title");
-    const youtube = interaction.options.getString("youtube");
-    const description = interaction.options.getString("description");
-    const linksRaw = interaction.options.getString("links");
+  if (interaction.isButton()) {
+    const [type, code, index] = interaction.customId.split("_");
+    if (type !== "link") return;
 
-    const links = linksRaw ? linksRaw.split(",").map(l => l.trim()) : [];
     const videos = await fs.readJson(DATA_FILE);
-    const code = Date.now().toString();
-
-    videos.push({
-      code,
-      name: title,
-      videoLink: youtube,
-      description,
-      developer: "MrMoundo",
-      description2: "",
-      links
-    });
-
-    await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
-
-    const videoId =
-      youtube.includes("v=")
-        ? youtube.split("v=")[1].split("&")[0]
-        : youtube.split("youtu.be/")[1];
-
-    const embed = new EmbedBuilder()
-      .setTitle(`🎬 ${title}`)
-      .setDescription(description)
-      .setColor(0xff0000)
-      .setThumbnail(`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`)
-      .setFooter({
-        text: "Chillaxy • Official Release"
-      })
-      .setTimestamp();
-
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setLabel("Watch on YouTube")
-        .setStyle(ButtonStyle.Link)
-        .setURL(youtube)
-    );
-
-    const channel = await client.channels.fetch(CHANNEL_ID);
-    if (channel) {
-      await channel.send({
-        content: youtube,
-        embeds: [embed],
-        components: [row],
-        allowedMentions: { parse: [] }
+    const video = videos.find(v => v.code === code);
+    if (!video) {
+      return interaction.reply({
+        content: "Link unavailable.",
+        ephemeral: true
       });
     }
 
-    interaction.reply({ content: "Video published successfully.", ephemeral: true });
+    const link = video.links[Number(index)];
+    if (!link) {
+      return interaction.reply({
+        content: "Link unavailable.",
+        ephemeral: true
+      });
+    }
+
+    return interaction.reply({
+      content: link,
+      ephemeral: true
+    });
   }
 });
 
