@@ -16,10 +16,13 @@ dotenv.config();
 const CHANNEL_ID = "1298667533485735969";
 const DATA_FILE = "./data/videos.json";
 const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
+const OWNER_ID = process.env.ADMIN_ID;
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
+
+/* ================= COMMANDS ================= */
 
 const commands = [
   new SlashCommandBuilder()
@@ -67,31 +70,39 @@ const commands = [
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
+
 await rest.put(
   Routes.applicationCommands(process.env.CLIENT_ID),
   { body: commands }
 );
 
+/* ================= BOT ================= */
+
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   const member = interaction.member;
-  const allowed =
-    member.roles.cache.has(ADMIN_ROLE_ID) ||
-    interaction.user.id === process.env.ADMIN_ID;
 
-  if (!allowed) {
-    return interaction.reply({ content: "Access denied.", ephemeral: true });
+  const authorized =
+    interaction.user.id === OWNER_ID ||
+    (ADMIN_ROLE_ID && member.roles.cache.has(ADMIN_ROLE_ID));
+
+  if (!authorized) {
+    return interaction.reply({
+      content: "You are not authorized to use this command.",
+      ephemeral: true
+    });
   }
 
   const videos = await fs.readJson(DATA_FILE);
 
-  /* ADD VIDEO */
+  /* ===== ADD VIDEO ===== */
   if (interaction.commandName === "addvideo") {
     const title = interaction.options.getString("title");
     const youtube = interaction.options.getString("youtube");
     const description = interaction.options.getString("description") || "";
     const linksRaw = interaction.options.getString("links");
+
     const links = linksRaw ? linksRaw.split(",").map(l => l.trim()) : [];
 
     videos.push({
@@ -126,10 +137,13 @@ client.on("interactionCreate", async interaction => {
       });
     }
 
-    return interaction.reply({ content: "Video added.", ephemeral: true });
+    return interaction.reply({
+      content: "Video published successfully.",
+      ephemeral: true
+    });
   }
 
-  /* EDIT VIDEO */
+  /* ===== EDIT VIDEO ===== */
   if (interaction.commandName === "editvideo") {
     const title = interaction.options.getString("title");
     const newTitle = interaction.options.getString("newtitle");
@@ -138,7 +152,10 @@ client.on("interactionCreate", async interaction => {
 
     const video = videos.find(v => v.name === title);
     if (!video) {
-      return interaction.reply({ content: "Video not found.", ephemeral: true });
+      return interaction.reply({
+        content: "Video not found.",
+        ephemeral: true
+      });
     }
 
     if (newTitle) video.name = newTitle;
@@ -151,30 +168,46 @@ client.on("interactionCreate", async interaction => {
 
     await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
 
-    return interaction.reply({ content: "Video updated.", ephemeral: true });
+    return interaction.reply({
+      content: "Video updated successfully.",
+      ephemeral: true
+    });
   }
 
-  /* DELETE VIDEO */
+  /* ===== DELETE VIDEO ===== */
   if (interaction.commandName === "deletevideo") {
     const title = interaction.options.getString("title");
     const filtered = videos.filter(v => v.name !== title);
 
     if (filtered.length === videos.length) {
-      return interaction.reply({ content: "Video not found.", ephemeral: true });
+      return interaction.reply({
+        content: "Video not found.",
+        ephemeral: true
+      });
     }
 
     await fs.writeJson(DATA_FILE, filtered, { spaces: 2 });
-    return interaction.reply({ content: "Video deleted.", ephemeral: true });
+
+    return interaction.reply({
+      content: "Video deleted successfully.",
+      ephemeral: true
+    });
   }
 
-  /* LIST VIDEOS */
+  /* ===== LIST VIDEOS (HIDDEN) ===== */
   if (interaction.commandName === "listvideos") {
     if (!videos.length) {
-      return interaction.reply({ content: "No videos found.", ephemeral: true });
+      return interaction.reply({
+        content: "No videos found.",
+        ephemeral: true
+      });
     }
 
     const list = videos.map(v => `• ${v.name}`).join("\n");
-    return interaction.reply({ content: list, ephemeral: true });
+    return interaction.reply({
+      content: list,
+      ephemeral: true
+    });
   }
 });
 
