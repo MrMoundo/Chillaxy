@@ -2,8 +2,19 @@ import express from "express";
 
 const router = express.Router();
 
+router.get("/login", (req, res) => {
+  const params = new URLSearchParams({
+    client_id: process.env.CLIENT_ID,
+    response_type: "code",
+    scope: "identify",
+    redirect_uri: process.env.REDIRECT_URI
+  });
+  res.redirect(`https://discord.com/oauth2/authorize?${params}`);
+});
+
 router.get("/callback", async (req, res) => {
   const code = req.query.code;
+
   const params = new URLSearchParams();
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
@@ -29,8 +40,12 @@ router.get("/callback", async (req, res) => {
     return res.send("Unauthorized");
   }
 
+  req.session.user = user.id;
   res.redirect("/dashboard.html");
 });
 
-export default router;
+router.get("/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/"));
+});
 
+export default router;
