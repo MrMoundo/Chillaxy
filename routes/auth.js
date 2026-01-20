@@ -1,6 +1,8 @@
 import express from "express";
+import fs from "fs-extra";
 
 const router = express.Router();
+const ADMINS_FILE = "./data/admins.json";
 
 router.get("/login", (req, res) => {
   const params = new URLSearchParams({
@@ -36,7 +38,9 @@ router.get("/callback", async (req, res) => {
 
   const user = await userRes.json();
 
-  if (user.id !== process.env.ADMIN_ID) {
+  const admins = await fs.readJson(ADMINS_FILE);
+
+  if (!admins.includes(user.id)) {
     return res.send("Unauthorized");
   }
 
