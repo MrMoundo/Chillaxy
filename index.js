@@ -13,8 +13,8 @@ app.use(express.json());
 app.use("/api/videos", videoRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Chillaxy Backend is running 🚀");
+  res.send("Chillaxy Backend is running");
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running on", PORT));
+app.listen(PORT);
