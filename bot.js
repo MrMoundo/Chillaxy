@@ -41,7 +41,6 @@ const commands = [
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
-
 await rest.put(
   Routes.applicationCommands(process.env.CLIENT_ID),
   { body: commands }
@@ -62,7 +61,6 @@ client.on("interactionCreate", async interaction => {
     const linksRaw = interaction.options.getString("links");
 
     const links = linksRaw ? linksRaw.split(",").map(l => l.trim()) : [];
-
     const videos = await fs.readJson(DATA_FILE);
     const code = Date.now().toString();
 
@@ -84,12 +82,12 @@ client.on("interactionCreate", async interaction => {
         : youtube.split("youtu.be/")[1];
 
     const embed = new EmbedBuilder()
-      .setTitle(title)
+      .setTitle(`🎬 ${title}`)
       .setDescription(description)
       .setColor(0xff0000)
-      .setImage(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`)
+      .setThumbnail(`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`)
       .setFooter({
-        text: "Chillaxy • Official Content"
+        text: "Chillaxy • Official Release"
       })
       .setTimestamp();
 
@@ -103,6 +101,7 @@ client.on("interactionCreate", async interaction => {
     const channel = await client.channels.fetch(CHANNEL_ID);
     if (channel) {
       await channel.send({
+        content: youtube,
         embeds: [embed],
         components: [row],
         allowedMentions: { parse: [] }
