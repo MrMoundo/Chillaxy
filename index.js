@@ -14,7 +14,8 @@ dotenv.config();
 
 const app = express();
 
-/* ===== MIDDLEWARE ===== */
+/* ================= MIDDLEWARE ================= */
+
 app.use(cors());
 app.use(express.json());
 
@@ -22,23 +23,37 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false }
+  cookie: {
+    secure: false
+  }
 }));
 
-/* ===== ROUTES ===== */
+/* ================= ROUTES ================= */
+
 app.use("/auth", authRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api/banners", bannerRoutes);
 
-/* ===== STATIC ===== */
+/* ================= PROTECT DASHBOARD ================= */
+// أي حد يحاول يدخل الداشبورد من غير Login
+app.get("/dashboard.html", (req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect("/auth/login");
+  }
+  next();
+});
+
+/* ================= STATIC FILES ================= */
+
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
   res.send("Chillaxy Backend is running");
 });
 
-/* ===== LISTEN ===== */
+/* ================= LISTEN ================= */
+
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server running...");
 });
