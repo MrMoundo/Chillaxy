@@ -1,12 +1,19 @@
 import express from "express";
-import fs from "fs";
+import fs from "fs-extra";
 
 const router = express.Router();
-const DATA_PATH = "./data/videos.json";
+const FILE = "./data/videos.json";
 
-router.get("/", (req, res) => {
-  const data = JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
+router.get("/", async (req, res) => {
+  const data = await fs.readJson(FILE);
   res.json(data);
+});
+
+router.post("/", async (req, res) => {
+  const data = await fs.readJson(FILE);
+  data.push(req.body);
+  await fs.writeJson(FILE, data, { spaces: 2 });
+  res.json({ success: true });
 });
 
 export default router;
