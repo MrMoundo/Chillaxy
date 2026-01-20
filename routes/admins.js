@@ -17,12 +17,17 @@ const log = async (user, action, target = "") => {
 };
 
 router.post("/", async (req, res) => {
+  if (!req.session.user) return res.sendStatus(401);
+
   const admins = await fs.readJson(ADMINS);
+
+  if (!admins.includes(req.session.user)) {
+    return res.sendStatus(403);
+  }
 
   if (!admins.includes(req.body.id)) {
     admins.push(req.body.id);
     await fs.writeJson(ADMINS, admins, { spaces: 2 });
-
     await log(req.session.user, "add_admin", req.body.id);
   }
 
