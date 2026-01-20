@@ -5,11 +5,11 @@ import session from "express-session";
 import videoRoutes from "./routes/videos.js";
 import authRoutes from "./routes/auth.js";
 import "./bot.js";
-
+import adminRoutes from "./routes/admins.js";
 dotenv.config();
 
 const app = express();
-
+app.use("/api/admins", adminRoutes);
 app.use(cors());
 app.use(express.json());
 
@@ -44,3 +44,4 @@ app.get("/", (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000);
+
