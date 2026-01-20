@@ -7,13 +7,14 @@ import videoRoutes from "./routes/videos.js";
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admins.js";
 import bannerRoutes from "./routes/banners.js";
-app.use("/api/banners", bannerRoutes);
+
 import "./bot.js";
 
 dotenv.config();
 
 const app = express();
 
+/* ===== MIDDLEWARE ===== */
 app.use(cors());
 app.use(express.json());
 
@@ -21,21 +22,23 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: {
-    secure: false
-  }
+  cookie: { secure: false }
 }));
 
+/* ===== ROUTES ===== */
 app.use("/auth", authRoutes);
-
 app.use("/api/admins", adminRoutes);
 app.use("/api/videos", videoRoutes);
+app.use("/api/banners", bannerRoutes);
 
+/* ===== STATIC ===== */
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
   res.send("Chillaxy Backend is running");
 });
 
-app.listen(process.env.PORT || 3000);
-
+/* ===== LISTEN ===== */
+app.listen(process.env.PORT || 3000, () => {
+  console.log("Server running...");
+});
