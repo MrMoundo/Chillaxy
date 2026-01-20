@@ -91,18 +91,24 @@ client.on("interactionCreate", async interaction => {
     await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
 
     // ===== Embed =====
-    const embed = new EmbedBuilder()
-      .setTitle(title)
-      .setDescription(description)
-      .setColor(0x00ffd5)
-      .setURL(youtube)
-      .setFooter({ text: "Chillaxy Store" });
+const embed = new EmbedBuilder()
+  .setTitle(`🎬 ${title}`)
+  .setDescription(description)
+  .setColor(0xff0000) // أحمر
+  .setImage(`https://img.youtube.com/vi/${youtube.split("v=")[1]?.split("&")[0] || youtube.split("youtu.be/")[1]}/maxresdefault.jpg`)
+  .addFields(
+    {
+      name: "▶️ مشاهدة الفيديو",
+      value: `[اضغط هنا لمشاهدة الفيديو](${youtube})`,
+      inline: false
+    }
+  )
+  .setFooter({
+    text: "Chillaxy Store • New Video",
+    iconURL: "https://i.imgur.com/9Y6YFQK.png" // أي أيقونة بسيطة (اختياري)
+  })
+  .setTimestamp();
 
-    const channel = await client.channels.fetch(CHANNEL_ID);
-    if (channel) await channel.send({ embeds: [embed] });
-
-    interaction.reply("✅ الفيديو اتضاف + اتبعت في الشانل");
-  }
 
   /* ===== DELETE VIDEO ===== */
   if (interaction.commandName === "deletevideo") {
@@ -121,3 +127,4 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(process.env.BOT_TOKEN);
+
