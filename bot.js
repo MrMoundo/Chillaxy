@@ -13,9 +13,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const ADMIN_ID = "1322627399313133641";
 const CHANNEL_ID = "1298667533485735969";
 const DATA_FILE = "./data/videos.json";
+const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
@@ -36,19 +36,34 @@ const commands = [
     )
     .addStringOption(o =>
       o.setName("links").setDescription("Extra links separated by comma").setRequired(false)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("editvideo")
+    .setDescription("Edit an existing video by title")
+    .addStringOption(o =>
+      o.setName("title").setDescription("Current video title").setRequired(true)
     )
     .addStringOption(o =>
-      o.setName("mention")
-        .setDescription("Mention option")
-        .addChoices(
-          { name: "None", value: "none" },
-          { name: "Everyone", value: "everyone" }
-        )
-        .setRequired(false)
+      o.setName("newtitle").setDescription("New title").setRequired(false)
     )
-    .addRoleOption(o =>
-      o.setName("role").setDescription("Mention a specific role").setRequired(false)
+    .addStringOption(o =>
+      o.setName("description").setDescription("New description").setRequired(false)
     )
+    .addStringOption(o =>
+      o.setName("links").setDescription("New links separated by comma").setRequired(false)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("deletevideo")
+    .setDescription("Delete a video by title")
+    .addStringOption(o =>
+      o.setName("title").setDescription("Video title").setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("listvideos")
+    .setDescription("List all videos (hidden)")
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
@@ -58,95 +73,108 @@ await rest.put(
 );
 
 client.on("interactionCreate", async interaction => {
-  if (interaction.isChatInputCommand()) {
-    if (interaction.user.id !== ADMIN_ID) {
-      return interaction.reply({ content: "Access denied.", ephemeral: true });
-    }
+  if (!interaction.isChatInputCommand()) return;
 
-    if (interaction.commandName === "addvideo") {
-      const title = interaction.options.getString("title");
-      const youtube = interaction.options.getString("youtube");
-      const description = interaction.options.getString("description");
-      const linksRaw = interaction.options.getString("links");
-      const mentionType = interaction.options.getString("mention");
-      const role = interaction.options.getRole("role");
+  const member = interaction.member;
+  const allowed =
+    member.roles.cache.has(ADMIN_ROLE_ID) ||
+    interaction.user.id === process.env.ADMIN_ID;
 
-      const links = linksRaw ? linksRaw.split(",").map(l => l.trim()) : [];
-      const videos = await fs.readJson(DATA_FILE);
-      const code = Date.now().toString();
-
-      videos.push({
-        code,
-        name: title,
-        videoLink: youtube,
-        description: description || "",
-        developer: "MrMoundo",
-        description2: "",
-        links
-      });
-
-      await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
-
-      let mentionText = "";
-      if (role) mentionText = `<@&${role.id}>`;
-      else if (mentionType === "everyone") mentionText = "@everyone";
-
-      const contentParts = [];
-      contentParts.push(`**${title}**`);
-      if (description) contentParts.push(description);
-      contentParts.push(youtube);
-      if (mentionText) contentParts.push(mentionText);
-
-      const buttons = links.map((_, i) =>
-        new ButtonBuilder()
-          .setCustomId(`link_${code}_${i}`)
-          .setLabel("Links")
-          .setStyle(ButtonStyle.Secondary)
-      );
-
-      const rows = [];
-      if (buttons.length > 0) {
-        rows.push(
-          new ActionRowBuilder().addComponents(buttons.slice(0, 5))
-        );
-      }
-
-      const channel = await client.channels.fetch(CHANNEL_ID);
-      if (channel) {
-        await channel.send({
-          content: contentParts.join("\n"),
-          components: rows,
-          allowedMentions: {
-            parse: mentionText === "@everyone" ? ["everyone"] : [],
-            roles: role ? [role.id] : []
-          }
-        });
-      }
-
-      return interaction.reply({
-        content: "Video published successfully.",
-        ephemeral: true
-      });
-    }
+  if (!allowed) {
+    return interaction.reply({ content: "Access denied.", ephemeral: true });
   }
 
-  if (interaction.isButton()) {
-    const [type, code, index] = interaction.customId.split("_");
-    if (type !== "link") return;
+  const videos = await fs.readJson(DATA_FILE);
 
-    const videos = await fs.readJson(DATA_FILE);
-    const video = videos.find(v => v.code === code);
-    if (!video || !video.links[index]) {
-      return interaction.reply({
-        content: "Link unavailable.",
-        ephemeral: true
+  /* ADD VIDEO */
+  if (interaction.commandName === "addvideo") {
+    const title = interaction.options.getString("title");
+    const youtube = interaction.options.getString("youtube");
+    const description = interaction.options.getString("description") || "";
+    const linksRaw = interaction.options.getString("links");
+    const links = linksRaw ? linksRaw.split(",").map(l => l.trim()) : [];
+
+    videos.push({
+      code: Date.now().toString(),
+      name: title,
+      videoLink: youtube,
+      description,
+      developer: "MrMoundo",
+      description2: "",
+      links
+    });
+
+    await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
+
+    const buttons = links.map((_, i) =>
+      new ButtonBuilder()
+        .setCustomId(`link_${Date.now()}_${i}`)
+        .setLabel("Links")
+        .setStyle(ButtonStyle.Secondary)
+    );
+
+    const rows = buttons.length
+      ? [new ActionRowBuilder().addComponents(buttons.slice(0, 5))]
+      : [];
+
+    const channel = await client.channels.fetch(CHANNEL_ID);
+    if (channel) {
+      await channel.send({
+        content: `**${title}**\n${description}\n${youtube}`,
+        components: rows,
+        allowedMentions: { parse: [] }
       });
     }
 
-    return interaction.reply({
-      content: video.links[index],
-      ephemeral: true
-    });
+    return interaction.reply({ content: "Video added.", ephemeral: true });
+  }
+
+  /* EDIT VIDEO */
+  if (interaction.commandName === "editvideo") {
+    const title = interaction.options.getString("title");
+    const newTitle = interaction.options.getString("newtitle");
+    const newDesc = interaction.options.getString("description");
+    const linksRaw = interaction.options.getString("links");
+
+    const video = videos.find(v => v.name === title);
+    if (!video) {
+      return interaction.reply({ content: "Video not found.", ephemeral: true });
+    }
+
+    if (newTitle) video.name = newTitle;
+    if (newDesc !== null) video.description = newDesc;
+    if (linksRaw !== null) {
+      video.links = linksRaw
+        ? linksRaw.split(",").map(l => l.trim())
+        : [];
+    }
+
+    await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
+
+    return interaction.reply({ content: "Video updated.", ephemeral: true });
+  }
+
+  /* DELETE VIDEO */
+  if (interaction.commandName === "deletevideo") {
+    const title = interaction.options.getString("title");
+    const filtered = videos.filter(v => v.name !== title);
+
+    if (filtered.length === videos.length) {
+      return interaction.reply({ content: "Video not found.", ephemeral: true });
+    }
+
+    await fs.writeJson(DATA_FILE, filtered, { spaces: 2 });
+    return interaction.reply({ content: "Video deleted.", ephemeral: true });
+  }
+
+  /* LIST VIDEOS */
+  if (interaction.commandName === "listvideos") {
+    if (!videos.length) {
+      return interaction.reply({ content: "No videos found.", ephemeral: true });
+    }
+
+    const list = videos.map(v => `• ${v.name}`).join("\n");
+    return interaction.reply({ content: list, ephemeral: true });
   }
 });
 
