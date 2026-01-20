@@ -53,3 +53,5 @@ router.get("/logout", (req, res) => {
 });
 
 export default router;
+
+console.log("LOGIN USER:", user.id);
