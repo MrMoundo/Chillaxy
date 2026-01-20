@@ -6,7 +6,8 @@ import session from "express-session";
 import videoRoutes from "./routes/videos.js";
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admins.js";
-
+import bannerRoutes from "./routes/banners.js";
+app.use("/api/banners", bannerRoutes);
 import "./bot.js";
 
 dotenv.config();
@@ -37,3 +38,4 @@ app.get("/", (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000);
+
