@@ -45,6 +45,8 @@ router.get("/callback", async (req, res) => {
   }
 
   req.session.user = user.id;
+  console.log("LOGIN USER:", user.id);
+
   res.redirect("/dashboard.html");
 });
 
@@ -53,5 +55,3 @@ router.get("/logout", (req, res) => {
 });
 
 export default router;
-
-console.log("LOGIN USER:", user.id);
