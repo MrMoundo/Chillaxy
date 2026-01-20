@@ -6,21 +6,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
+  margin:0;
+  font-family:Inter,Arial;
   background:#0b0f1a;
   color:#fff;
-  font-family:Inter,Arial;
-  margin:0;
 }
 header {
   padding:20px;
-  font-size:26px;
+  font-size:28px;
   font-weight:700;
+}
+input {
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border-radius:6px;
+  border:none;
 }
 .card {
   background:#141a2e;
   padding:16px;
   margin:16px;
-  border-radius:10px;
+  border-radius:12px;
+  animation: fade .4s ease;
 }
 button {
   background:#ff0000;
@@ -29,34 +37,83 @@ button {
   padding:8px 14px;
   border-radius:6px;
   cursor:pointer;
+  margin-right:6px;
+}
+@keyframes fade {
+  from {opacity:0; transform:translateY(10px)}
+  to {opacity:1; transform:none}
 }
 </style>
 </head>
 <body>
 
 <header>Chillaxy Dashboard</header>
+
+<div style="padding:16px">
+  <input id="search" placeholder="Search videos..." onkeyup="render()">
+</div>
+
 <div id="videos"></div>
+
+<hr style="border:1px solid #222">
+
+<div style="padding:16px">
+  <h3>Add Admin</h3>
+  <input id="adminId" placeholder="Discord User ID">
+  <button onclick="addAdmin()">Add</button>
+</div>
 
 <script>
 const API = "/api/videos";
+let videos = [];
 
-fetch(API).then(r=>r.json()).then(data=>{
+async function load() {
+  videos = await fetch(API).then(r=>r.json());
+  render();
+}
+
+function render() {
+  const q = document.getElementById("search").value.toLowerCase();
   const wrap = document.getElementById("videos");
-  data.forEach(v=>{
+  wrap.innerHTML = "";
+
+  videos.filter(v => v.name.toLowerCase().includes(q)).forEach(v => {
     const div = document.createElement("div");
     div.className = "card";
     div.innerHTML = `
-      <h2>${v.name}</h2>
-      <p>${v.description || ""}</p>
+      <h2 contenteditable onblur="edit('${v.code}','name',this.innerText)">${v.name}</h2>
+      <p contenteditable onblur="edit('${v.code}','description',this.innerText)">
+        ${v.description || ""}
+      </p>
       <button onclick="del('${v.code}')">Delete</button>
     `;
     wrap.appendChild(div);
   });
-});
-
-function del(code){
-  fetch(API+"/"+code,{method:"DELETE"}).then(()=>location.reload());
 }
+
+function edit(code, field, value) {
+  fetch(API+"/"+code,{
+    method:"PUT",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({[field]:value})
+  });
+}
+
+function del(code) {
+  fetch(API+"/"+code,{method:"DELETE"}).then(load);
+}
+
+function addAdmin() {
+  const id = document.getElementById("adminId").value;
+  fetch("/api/admins",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id})
+  });
+  document.getElementById("adminId").value="";
+}
+
+load();
 </script>
 
 </body>
