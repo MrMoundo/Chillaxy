@@ -32,10 +32,22 @@ const commands = [
       o.setName("youtube").setDescription("YouTube URL").setRequired(true)
     )
     .addStringOption(o =>
-      o.setName("description").setDescription("Video description").setRequired(true)
+      o.setName("description").setDescription("Optional description").setRequired(false)
     )
     .addStringOption(o =>
       o.setName("links").setDescription("Extra links separated by comma").setRequired(false)
+    )
+    .addStringOption(o =>
+      o.setName("mention")
+        .setDescription("Mention option")
+        .addChoices(
+          { name: "None", value: "none" },
+          { name: "Everyone", value: "everyone" }
+        )
+        .setRequired(false)
+    )
+    .addRoleOption(o =>
+      o.setName("role").setDescription("Mention a specific role").setRequired(false)
     )
 ].map(c => c.toJSON());
 
@@ -44,8 +56,6 @@ await rest.put(
   Routes.applicationCommands(process.env.CLIENT_ID),
   { body: commands }
 );
-
-client.once("ready", () => {});
 
 client.on("interactionCreate", async interaction => {
   if (interaction.isChatInputCommand()) {
@@ -58,6 +68,8 @@ client.on("interactionCreate", async interaction => {
       const youtube = interaction.options.getString("youtube");
       const description = interaction.options.getString("description");
       const linksRaw = interaction.options.getString("links");
+      const mentionType = interaction.options.getString("mention");
+      const role = interaction.options.getRole("role");
 
       const links = linksRaw ? linksRaw.split(",").map(l => l.trim()) : [];
       const videos = await fs.readJson(DATA_FILE);
@@ -67,7 +79,7 @@ client.on("interactionCreate", async interaction => {
         code,
         name: title,
         videoLink: youtube,
-        description,
+        description: description || "",
         developer: "MrMoundo",
         description2: "",
         links
@@ -75,24 +87,39 @@ client.on("interactionCreate", async interaction => {
 
       await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
 
-      const buttons = links.map((link, i) =>
+      let mentionText = "";
+      if (role) mentionText = `<@&${role.id}>`;
+      else if (mentionType === "everyone") mentionText = "@everyone";
+
+      const contentParts = [];
+      contentParts.push(`**${title}**`);
+      if (description) contentParts.push(description);
+      contentParts.push(youtube);
+      if (mentionText) contentParts.push(mentionText);
+
+      const buttons = links.map((_, i) =>
         new ButtonBuilder()
           .setCustomId(`link_${code}_${i}`)
-          .setLabel(`Download ${i + 1}`)
+          .setLabel("Links")
           .setStyle(ButtonStyle.Secondary)
       );
 
       const rows = [];
-      if (buttons.length) {
-        rows.push(new ActionRowBuilder().addComponents(buttons.slice(0, 5)));
+      if (buttons.length > 0) {
+        rows.push(
+          new ActionRowBuilder().addComponents(buttons.slice(0, 5))
+        );
       }
 
       const channel = await client.channels.fetch(CHANNEL_ID);
       if (channel) {
         await channel.send({
-          content: `**${title}**\n${description}\n\n${youtube}`,
+          content: contentParts.join("\n"),
           components: rows,
-          allowedMentions: { parse: [] }
+          allowedMentions: {
+            parse: mentionText === "@everyone" ? ["everyone"] : [],
+            roles: role ? [role.id] : []
+          }
         });
       }
 
@@ -109,15 +136,7 @@ client.on("interactionCreate", async interaction => {
 
     const videos = await fs.readJson(DATA_FILE);
     const video = videos.find(v => v.code === code);
-    if (!video) {
-      return interaction.reply({
-        content: "Link unavailable.",
-        ephemeral: true
-      });
-    }
-
-    const link = video.links[Number(index)];
-    if (!link) {
+    if (!video || !video.links[index]) {
       return interaction.reply({
         content: "Link unavailable.",
         ephemeral: true
@@ -125,7 +144,7 @@ client.on("interactionCreate", async interaction => {
     }
 
     return interaction.reply({
-      content: link,
+      content: video.links[index],
       ephemeral: true
     });
   }
