@@ -5,32 +5,32 @@
 <title>Chillaxy Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body {
+body{
   margin:0;
   font-family:Inter,Arial;
   background:#0b0f1a;
   color:#fff;
 }
-header {
+header{
   padding:20px;
   font-size:28px;
   font-weight:700;
 }
-input {
+input{
   width:100%;
   padding:10px;
   margin:10px 0;
   border-radius:6px;
   border:none;
 }
-.card {
+.card{
   background:#141a2e;
   padding:16px;
   margin:16px;
   border-radius:12px;
-  animation: fade .4s ease;
+  animation:fade .3s ease;
 }
-button {
+button{
   background:#ff0000;
   border:none;
   color:#fff;
@@ -39,9 +39,25 @@ button {
   cursor:pointer;
   margin-right:6px;
 }
-@keyframes fade {
-  from {opacity:0; transform:translateY(10px)}
-  to {opacity:1; transform:none}
+.toast{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#141a2e;
+  padding:12px 18px;
+  border-radius:8px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  animation:toast .4s ease;
+}
+.toast.success{border-left:4px solid #00ff9c;}
+.toast.error{border-left:4px solid #ff4b4b;}
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1}
+}
+@keyframes toast{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1}
 }
 </style>
 </head>
@@ -63,54 +79,73 @@ button {
   <button onclick="addAdmin()">Add</button>
 </div>
 
-<script>
-const API = "/api/videos";
-let videos = [];
+<div id="toast"></div>
 
-async function load() {
-  videos = await fetch(API).then(r=>r.json());
+<script>
+const API="/api/videos";
+let videos=[];
+
+const toast=(msg,type="success")=>{
+  const t=document.createElement("div");
+  t.className=`toast ${type}`;
+  t.innerText=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+};
+
+async function load(){
+  videos=await fetch(API).then(r=>r.json());
   render();
 }
 
-function render() {
-  const q = document.getElementById("search").value.toLowerCase();
-  const wrap = document.getElementById("videos");
-  wrap.innerHTML = "";
-
-  videos.filter(v => v.name.toLowerCase().includes(q)).forEach(v => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <h2 contenteditable onblur="edit('${v.code}','name',this.innerText)">${v.name}</h2>
+function render(){
+  const q=document.getElementById("search").value.toLowerCase();
+  const wrap=document.getElementById("videos");
+  wrap.innerHTML="";
+  videos.filter(v=>v.name.toLowerCase().includes(q)).forEach(v=>{
+    const d=document.createElement("div");
+    d.className="card";
+    d.innerHTML=`
+      <h2 contenteditable onblur="edit('${v.code}','name',this.innerText)">
+        ${v.name}
+      </h2>
       <p contenteditable onblur="edit('${v.code}','description',this.innerText)">
-        ${v.description || ""}
+        ${v.description||""}
       </p>
       <button onclick="del('${v.code}')">Delete</button>
     `;
-    wrap.appendChild(div);
+    wrap.appendChild(d);
   });
 }
 
-function edit(code, field, value) {
+function edit(code,field,value){
   fetch(API+"/"+code,{
     method:"PUT",
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({[field]:value})
-  });
+  }).then(()=>toast("Saved"));
 }
 
-function del(code) {
-  fetch(API+"/"+code,{method:"DELETE"}).then(load);
+function del(code){
+  fetch(API+"/"+code,{method:"DELETE"})
+    .then(()=>{
+      toast("Video deleted");
+      load();
+    });
 }
 
-function addAdmin() {
-  const id = document.getElementById("adminId").value;
+function addAdmin(){
+  const id=document.getElementById("adminId").value;
+  if(!id) return toast("Invalid ID","error");
+
   fetch("/api/admins",{
     method:"POST",
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({id})
+  }).then(()=>{
+    toast("Admin added");
+    document.getElementById("adminId").value="";
   });
-  document.getElementById("adminId").value="";
 }
 
 load();
