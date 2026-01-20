@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import session from "express-session";
+import fs from "fs-extra";
 
 import videoRoutes from "./routes/videos.js";
 import authRoutes from "./routes/auth.js";
@@ -13,6 +14,7 @@ import "./bot.js";
 dotenv.config();
 
 const app = express();
+const ADMINS_FILE = "./data/admins.json";
 
 /* ================= MIDDLEWARE ================= */
 
@@ -36,11 +38,18 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/banners", bannerRoutes);
 
 /* ================= PROTECT DASHBOARD ================= */
-// أي حد يحاول يدخل الداشبورد من غير Login
-app.get("/dashboard.html", (req, res, next) => {
+app.get("/dashboard.html", async (req, res, next) => {
+  // مش عامل login
   if (!req.session.user) {
     return res.redirect("/auth/login");
   }
+
+  // مش admin
+  const admins = await fs.readJson(ADMINS_FILE);
+  if (!admins.includes(req.session.user)) {
+    return res.status(403).send("Forbidden");
+  }
+
   next();
 });
 
