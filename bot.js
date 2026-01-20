@@ -3,7 +3,8 @@ import {
   GatewayIntentBits,
   SlashCommandBuilder,
   REST,
-  Routes
+  Routes,
+  EmbedBuilder
 } from "discord.js";
 import fs from "fs-extra";
 import dotenv from "dotenv";
@@ -11,17 +12,18 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const ADMIN_ID = "1322627399313133641";
+const CHANNEL_ID = "1298667533485735969";
 const DATA_FILE = "./data/videos.json";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// Register Slash Command
+/* ===== Slash Commands ===== */
 const commands = [
   new SlashCommandBuilder()
     .setName("addvideo")
-    .setDescription("Add new video to Chillaxy site")
+    .setDescription("Add new video")
     .addStringOption(o =>
       o.setName("title").setDescription("Video title").setRequired(true)
     )
@@ -32,9 +34,16 @@ const commands = [
       o.setName("description").setDescription("Description").setRequired(true)
     )
     .addStringOption(o =>
-      o.setName("links").setDescription("Links separated by ,").setRequired(false)
+      o.setName("links").setDescription("Extra links , separated").setRequired(false)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("deletevideo")
+    .setDescription("Delete video by code")
+    .addStringOption(o =>
+      o.setName("code").setDescription("Video code").setRequired(true)
     )
-].map(cmd => cmd.toJSON());
+].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
 
@@ -46,40 +55,68 @@ const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
   console.log("Slash commands registered");
 })();
 
+/* ===== Bot Ready ===== */
 client.once("ready", () => {
   console.log(`Bot online as ${client.user.tag}`);
 });
 
+/* ===== Interactions ===== */
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
-
-  if (interaction.user.id !== ADMIN_ID) {
+  if (interaction.user.id !== ADMIN_ID)
     return interaction.reply({ content: "❌ مش مسموح", ephemeral: true });
-  }
 
+  /* ===== ADD VIDEO ===== */
   if (interaction.commandName === "addvideo") {
     const title = interaction.options.getString("title");
     const youtube = interaction.options.getString("youtube");
-    const desc = interaction.options.getString("description");
+    const description = interaction.options.getString("description");
     const linksRaw = interaction.options.getString("links");
-
     const links = linksRaw ? linksRaw.split(",").map(l => l.trim()) : [];
 
     const videos = await fs.readJson(DATA_FILE);
+    const code = Date.now().toString();
 
-    videos.push({
-      code: Date.now().toString(),
+    const videoData = {
+      code,
       name: title,
       videoLink: youtube,
-      description: desc,
+      description,
       developer: "MrMoundo",
       description2: "",
       links
-    });
+    };
 
+    videos.push(videoData);
     await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
 
-    interaction.reply("✅ الفيديو اتضاف وظهر في الموقع");
+    // ===== Embed =====
+    const embed = new EmbedBuilder()
+      .setTitle(title)
+      .setDescription(description)
+      .setColor(0x00ffd5)
+      .setURL(youtube)
+      .setFooter({ text: "Chillaxy Store" });
+
+    const channel = await client.channels.fetch(CHANNEL_ID);
+    if (channel) await channel.send({ embeds: [embed] });
+
+    interaction.reply("✅ الفيديو اتضاف + اتبعت في الشانل");
+  }
+
+  /* ===== DELETE VIDEO ===== */
+  if (interaction.commandName === "deletevideo") {
+    const code = interaction.options.getString("code");
+    let videos = await fs.readJson(DATA_FILE);
+
+    const before = videos.length;
+    videos = videos.filter(v => v.code !== code);
+
+    if (videos.length === before)
+      return interaction.reply("❌ الكود مش موجود");
+
+    await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
+    interaction.reply("🗑️ الفيديو اتمسح");
   }
 });
 
