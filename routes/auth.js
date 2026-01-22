@@ -17,13 +17,12 @@ router.get("/login", (req, res) => {
 router.get("/callback", async (req, res) => {
   const code = req.query.code;
 
-  const params = new URLSearchParams({
-    client_id: process.env.CLIENT_ID,
-    client_secret: process.env.CLIENT_SECRET,
-    grant_type: "authorization_code",
-    code,
-    redirect_uri: process.env.REDIRECT_URI
-  });
+  const params = new URLSearchParams();
+  params.append("client_id", process.env.CLIENT_ID);
+  params.append("client_secret", process.env.CLIENT_SECRET);
+  params.append("grant_type", "authorization_code");
+  params.append("code", code);
+  params.append("redirect_uri", process.env.REDIRECT_URI);
 
   const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
     method: "POST",
@@ -38,14 +37,21 @@ router.get("/callback", async (req, res) => {
   });
 
   const user = await userRes.json();
-
   const admins = await fs.readJson(ADMINS_FILE);
-  if (!admins.includes(user.id)) {
-    return res.send("Unauthorized");
-  }
 
-  req.session.user = user.id;
+  req.session.user = {
+    id: user.id,
+    username: user.username,
+    avatar: user.avatar,
+    isAdmin: admins.includes(user.id)
+  };
+
   res.redirect("/");
+});
+
+router.get("/me", (req, res) => {
+  if (!req.session.user) return res.json(null);
+  res.json(req.session.user);
 });
 
 router.get("/logout", (req, res) => {
