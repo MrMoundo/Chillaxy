@@ -1,68 +1,83 @@
-/* INTRO */
+/* ================= INTRO ================= */
 window.addEventListener("load", () => {
-  const intro = document.getElementById("intro");
-  setTimeout(() => intro.style.display = "none", 2800);
+  setTimeout(() => {
+    const intro = document.getElementById("intro");
+    if (intro) intro.style.display = "none";
+  }, 2800);
 });
 
-/* USER */
-fetch("/auth/me")
-  .then(r => r.json())
-  .then(user => {
-    if (!user) return;
+/* ================= MODAL ================= */
+function openModal(title, content) {
+  document.getElementById("modalTitle").innerText = title;
+  document.getElementById("modalContent").innerText = content;
+  document.getElementById("modal").classList.remove("hidden");
+}
 
-    const bar = document.getElementById("userBar");
-    bar.classList.remove("hidden");
-    document.getElementById("userAvatar").src = user.avatar;
-    document.getElementById("userName").innerText = user.username;
+function closeModal() {
+  document.getElementById("modal").classList.add("hidden");
+}
 
-    if (user.isAdmin) {
-      document.getElementById("adminBtn").classList.remove("hidden");
-      document.getElementById("adminBtn").onclick = () => {
-        window.location.href = "/dashboard.html";
-      };
-    }
+/* ================= TEXT ================= */
+const aboutText = `Welcome to Chillaxy Community!
+We are a place for gamers and creators to connect safely.`;
 
-    const stats = document.getElementById("statsBox");
-    stats.classList.remove("hidden");
-    setTimeout(() => stats.classList.add("hidden"), 300000);
-  });
+const faqText = `1. What is Chillaxy?
+A safe Discord-based community.
+2. Why no self bots?
+They break Discord rules.`;
 
-/* VIDEOS */
+const careersText = `Currently no open positions.
+Stay tuned!`;
+
+const privacyShield = `We protect your privacy seriously.
+Never share your personal data.`;
+
+const privacyPolicy = `No personal data is collected.
+Report suspicious activity.`;
+
+const tos = `Tools are for learning only.
+We are not responsible for bans.`;
+
+/* ================= VIDEOS ================= */
+let allVideos = [];
+
 fetch("/api/videos")
   .then(r => r.json())
   .then(videos => {
-    const grid = document.getElementById("videos");
-    const noRes = document.getElementById("noResults");
-
-    function render(list){
-      grid.innerHTML = "";
-      if(!list.length){
-        noRes.classList.remove("hidden");
-        return;
-      }
-      noRes.classList.add("hidden");
-
-      list.forEach(v => {
-        const d = document.createElement("div");
-        d.className = "card";
-        d.innerHTML = `
-          <h3>${v.name}</h3>
-          <p>${v.description || ""}</p>
-          <a href="${v.videoLink}" target="_blank">Watch</a>
-        `;
-        grid.appendChild(d);
-      });
-    }
-
-    render(videos);
-
-    document.getElementById("search").oninput = e => {
-      const q = e.target.value.toLowerCase();
-      render(videos.filter(v => v.name.toLowerCase().includes(q)));
-    };
+    allVideos = videos;
+    renderVideos(videos);
   });
 
-/* BANNERS */
+function renderVideos(list) {
+  const grid = document.getElementById("videos");
+  const noRes = document.getElementById("noResults");
+  grid.innerHTML = "";
+
+  if (!list.length) {
+    noRes.classList.remove("hidden");
+    return;
+  }
+
+  noRes.classList.add("hidden");
+
+  list.forEach(v => {
+    const d = document.createElement("div");
+    d.className = "card";
+    d.innerHTML = `
+      <h3>${v.name}</h3>
+      <p>${v.description || ""}</p>
+      <a href="${v.videoLink}" target="_blank">Watch</a>
+    `;
+    grid.appendChild(d);
+  });
+}
+
+document.getElementById("search").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase();
+  renderVideos(allVideos.filter(v => v.name.toLowerCase().includes(q)));
+});
+
+/* ================= BANNERS ================= */
 fetch("/api/banners")
   .then(r => r.json())
   .then(banners => {
@@ -72,4 +87,15 @@ fetch("/api/banners")
       img.src = b.url;
       track.appendChild(img);
     });
+  });
+
+/* ================= USER STATUS ================= */
+fetch("/auth/me")
+  .then(r => r.json())
+  .then(user => {
+    if (!user) return;
+    document.getElementById("loginBtn").style.display = "none";
+    const join = document.getElementById("joinBox");
+    join.classList.remove("hidden");
+    setTimeout(() => join.classList.add("hidden"), 300000);
   });
