@@ -6,6 +6,10 @@
   --text:#ffffff;
   --muted:#a1a1aa;
   --accent:#7c3aed;
+
+  /* ===== NEW ===== */
+  --neon:#00ff9c;
+  --neon-soft:rgba(0,255,156,.25);
   --accent-soft:rgba(124,58,237,.25);
 }
 
@@ -16,7 +20,9 @@
 
 body{
   margin:0;
-  background:var(--bg);
+  background:
+    radial-gradient(1200px 600px at top, rgba(124,58,237,.08), transparent 60%),
+    var(--bg);
   color:var(--text);
   overflow-x:hidden;
 }
@@ -74,14 +80,27 @@ body{
   align-items:center;
   gap:20px;
   padding:16px 30px;
-  background:var(--panel);
+  background:rgba(20,20,22,.85);
+  backdrop-filter:blur(10px);
   border-bottom:1px solid var(--border);
 }
 
+/* Chillaxy clickable */
 .brand{
   font-weight:900;
   font-size:18px;
   letter-spacing:2px;
+  color:var(--text);
+  text-decoration:none;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.brand:hover{
+  color:var(--neon);
+  text-shadow:
+    0 0 8px var(--neon),
+    0 0 20px var(--neon-soft);
 }
 
 .topbar input{
@@ -97,13 +116,25 @@ body{
   color:var(--muted);
 }
 
+/* Login / Dashboard button */
 .login-btn{
-  background:var(--accent);
-  color:#fff;
+  background:transparent;
+  color:var(--accent);
   padding:10px 16px;
   border-radius:10px;
   text-decoration:none;
   font-size:14px;
+  border:1px solid var(--accent);
+  transition:.3s;
+}
+
+.login-btn:hover{
+  color:#000;
+  background:var(--neon);
+  border-color:var(--neon);
+  box-shadow:
+    0 0 12px var(--neon),
+    0 0 28px var(--neon-soft);
 }
 
 /* ================= HERO ================= */
@@ -134,7 +165,8 @@ body{
   flex-direction:column;
   justify-content:center;
   padding:0 60px;
-  background:linear-gradient(to right,var(--bg),transparent);
+  background:
+    linear-gradient(to right,var(--bg),transparent 70%);
 }
 
 .hero-overlay h1{
@@ -160,7 +192,9 @@ body{
   display:flex;
   align-items:center;
   gap:14px;
-  box-shadow:0 20px 40px rgba(0,0,0,.6);
+  box-shadow:
+    0 20px 40px rgba(0,0,0,.6),
+    0 0 30px rgba(124,58,237,.15);
   animation:slideIn .4s ease;
 }
 
@@ -173,6 +207,12 @@ body{
   color:var(--accent);
   text-decoration:none;
   font-weight:600;
+  transition:.3s;
+}
+
+.join a:hover{
+  color:var(--neon);
+  text-shadow:0 0 10px var(--neon);
 }
 
 @keyframes slideIn{
@@ -206,7 +246,9 @@ body{
 
 .card:hover{
   transform:translateY(-8px);
-  box-shadow:0 15px 40px rgba(0,0,0,.6);
+  box-shadow:
+    0 15px 40px rgba(0,0,0,.6),
+    0 0 25px rgba(124,58,237,.25);
 }
 
 .card h3{
@@ -223,6 +265,12 @@ body{
   color:var(--accent);
   text-decoration:none;
   font-weight:600;
+  transition:.3s;
+}
+
+.card a:hover{
+  color:var(--neon);
+  text-shadow:0 0 10px var(--neon);
 }
 
 .no-results{
@@ -276,11 +324,11 @@ body{
   border:none;
   color:var(--muted);
   cursor:pointer;
+  transition:.3s;
 }
 
-@keyframes fadeScale{
-  from{opacity:0;transform:scale(.95)}
-  to{opacity:1}
+.modal-box .close:hover{
+  color:var(--neon);
 }
 
 /* ================= FOOTER ================= */
@@ -303,10 +351,12 @@ footer a{
   text-decoration:none;
   display:block;
   margin-top:6px;
+  transition:.3s;
 }
 
 footer a:hover{
-  color:var(--accent);
+  color:var(--neon);
+  text-shadow:0 0 8px var(--neon);
 }
 
 /* ================= MOBILE ================= */
