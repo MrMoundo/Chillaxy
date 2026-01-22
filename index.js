@@ -1,73 +1,74 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import session from "express-session";
-import fs from "fs-extra";
-import fetch from "node-fetch";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chillaxy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
 
-import videoRoutes from "./routes/videos.js";
-import bannerRoutes from "./routes/banners.js";
-import authRoutes from "./routes/auth.js";
-import adminRoutes from "./routes/admins.js";
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="logo">Chillaxy</div>
+  <input id="search" placeholder="Search videos..." />
+</header>
 
-import "./bot.js";
+<!-- HERO -->
+<section class="hero">
+  <h1 class="glow">Chillaxy</h1>
+  <p>Premium Gaming & Video Platform</p>
+</section>
 
-dotenv.config();
-const app = express();
+<!-- JOIN STATUS (TEMP) -->
+<div id="joinStatus" class="join hidden">
+  <img src="https://i.ibb.co/1tXTkP3N/chillaxy.gif">
+  <div>
+    <strong>You are in Chillaxy Community</strong>
+    <br>
+    <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Join</a>
+  </div>
+</div>
 
-app.use(cors());
-app.use(express.json());
+<!-- BANNERS -->
+<section class="banners">
+  <div class="banner-track" id="banners"></div>
+</section>
 
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false
-}));
+<!-- VIDEOS -->
+<section id="videos" class="videos"></section>
 
-app.use(express.static("public"));
+<!-- FOOTER -->
+<footer>
+  <div>
+    <h3>Information</h3>
+    <a onclick="openModal('about-us')">About Us</a>
+    <a onclick="openModal('faq')">FAQ</a>
+    <a onclick="openModal('careers')">Careers</a>
+  </div>
+  <div>
+    <h3>Terms</h3>
+    <a onclick="openModal('privacy-policy')">Privacy Policy</a>
+    <a onclick="openModal('terms-of-service')">Terms of Service</a>
+  </div>
+  <div>
+    <h3>Socials</h3>
+    <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Discord</a>
+    <a href="https://www.youtube.com/@Mr-Moundo" target="_blank">YouTube</a>
+    <a href="https://instagram.com" target="_blank">Instagram</a>
+    <a href="https://facebook.com" target="_blank">Facebook</a>
+  </div>
+</footer>
 
-app.use("/api/videos", videoRoutes);
-app.use("/api/banners", bannerRoutes);
-app.use("/api/admins", adminRoutes);
-app.use("/auth", authRoutes);
+<!-- MODAL -->
+<div id="infoModal" class="modal hidden">
+  <div class="modal-box">
+    <button class="close" onclick="closeModal()">×</button>
+    <h2 id="modalTitle"></h2>
+    <p id="modalContent"></p>
+  </div>
+</div>
 
-/* ===== STATUS ===== */
-app.get("/auth/status", (req, res) => {
-  res.json({ loggedIn: !!req.session.user });
-});
-
-/* ===== SUPPORTERS COUNT ===== */
-app.get("/api/supporters-count", async (req, res) => {
-  const users = await fs.readJson("./data/auth_users.json");
-  res.json({ count: users.length });
-});
-
-/* ===== BACKGROUND CHECK (REMOVE ROLE IF AUTH REMOVED) ===== */
-setInterval(async () => {
-  const users = await fs.readJson("./data/auth_users.json");
-  const valid = [];
-
-  for (const u of users) {
-    const r = await fetch("https://discord.com/api/users/@me", {
-      headers: { Authorization: `Bearer ${u.access_token}` }
-    });
-
-    if (r.status === 401) {
-      await fetch(
-        `https://discord.com/api/guilds/${process.env.GUILD_ID}/members/${u.id}/roles/${process.env.SUPPORTER_ROLE_ID}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` }
-        }
-      );
-    } else {
-      valid.push(u);
-    }
-  }
-
-  await fs.writeJson("./data/auth_users.json", valid, { spaces: 2 });
-}, 10 * 60 * 1000);
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Chillaxy Backend is running");
-});
+<script src="app.js"></script>
+</body>
+</html>
