@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<!-- ================= INTRO ================= -->
+<!-- ===== INTRO ===== -->
 <div id="intro">
   <div class="intro-inner">
     <div class="intro-logo">CHILLAXY</div>
@@ -16,67 +16,60 @@
   </div>
 </div>
 
-<!-- ================= TOP BAR ================= -->
+<!-- ===== TOPBAR ===== -->
 <header class="topbar">
-  <div class="brand">Chillaxy</div>
-
-  <input 
-    id="search" 
-    type="text" 
-    placeholder="Search videos..."
-    autocomplete="off"
-  />
-
-  <div class="auth">
-    <a href="/auth/login" class="login-btn">Login with Discord</a>
-  </div>
+  <div class="brand">CHILLAXY</div>
+  <input id="search" placeholder="Search videos..." />
+  <a href="/auth/login" class="login-btn">Login with Discord</a>
 </header>
 
-<!-- ================= HERO ================= -->
+<!-- ===== HERO ===== -->
 <section class="hero">
-  <div class="hero-track" id="banners"></div>
-
+  <div class="hero-track" id="hero-track"></div>
   <div class="hero-overlay">
-    <h1>Upgrade Your Experience</h1>
-    <p>Premium gaming & video content curated for you</p>
+    <h1>Premium Gaming & Video Content</h1>
+    <p>Powered by Discord • Managed by Chillaxy</p>
   </div>
 </section>
 
-<!-- ================= VIDEOS ================= -->
+<!-- ===== VIDEOS ===== -->
 <section class="videos-section">
-  <h2>All Videos</h2>
-
+  <h2>Videos</h2>
   <div id="videos" class="videos-grid"></div>
-  <div id="no-results" class="no-results hidden">
-    No results found
+  <div id="noResults" class="no-results hidden">
+    No videos found
   </div>
 </section>
 
-<!-- ================= FOOTER ================= -->
+<!-- ===== FOOTER ===== -->
 <footer>
-  <div class="footer-col">
-    <h3>About Chillaxy</h3>
-    <p>
-      Chillaxy is a premium community-driven platform focused on
-      gaming, videos, and a smooth digital experience.
-    </p>
+  <div>
+    <h3>About</h3>
+    <a href="#" onclick="openModal('about')">About Us</a>
+    <a href="#" onclick="openModal('faq')">FAQ</a>
+    <a href="#" onclick="openModal('careers')">Careers</a>
   </div>
-
-  <div class="footer-col">
+  <div>
+    <h3>Terms</h3>
+    <a href="#" onclick="openModal('privacy')">Privacy Policy</a>
+    <a href="#" onclick="openModal('tos')">Terms of Service</a>
+  </div>
+  <div>
     <h3>Socials</h3>
     <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Discord</a>
     <a href="https://www.youtube.com/@Mr-Moundo" target="_blank">YouTube</a>
-    <a href="#">TikTok</a>
-    <a href="#">Instagram</a>
-    <a href="#">Facebook</a>
-  </div>
-
-  <div class="footer-col">
-    <h3>Legal</h3>
-    <a href="#">Privacy Policy</a>
-    <a href="#">Terms of Service</a>
+    <a href="#">Twitter</a>
   </div>
 </footer>
+
+<!-- ===== MODAL ===== -->
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <button class="close" onclick="closeModal()">✕</button>
+    <h3 id="modalTitle"></h3>
+    <p id="modalContent"></p>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
