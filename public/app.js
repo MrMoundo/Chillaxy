@@ -6,14 +6,42 @@ const videosGrid = document.querySelector(".videos-grid");
 const searchInput = document.querySelector(".topbar input");
 const noResults = document.querySelector(".no-results");
 const intro = document.getElementById("intro");
+const authArea = document.getElementById("authArea");
+const dashboardModal = document.getElementById("dashboard");
 
-/* ================= INTRO FIX ================= */
+/* ================= INTRO ================= */
 
 window.addEventListener("load", () => {
   setTimeout(() => {
     intro.style.display = "none";
   }, 2800);
 });
+
+/* ================= AUTH CHECK ================= */
+
+let CURRENT_USER = null;
+let IS_ADMIN = false;
+
+fetch("/api/me")
+  .then(r => {
+    if (r.status === 401) return null;
+    return r.json();
+  })
+  .then(user => {
+    if (!user) return;
+
+    CURRENT_USER = user;
+    IS_ADMIN = user.isAdmin;
+
+    // UI
+    authArea.innerHTML = `
+      <span class="user-name">👋 ${user.id}</span>
+      ${IS_ADMIN ? `<button class="login-btn" onclick="toggleDash()">Dashboard</button>` : ""}
+      <a href="/auth/logout" class="login-btn">Logout</a>
+    `;
+
+    showJoinStatus();
+  });
 
 /* ================= HERO SLIDER ================= */
 
@@ -48,7 +76,7 @@ fetch(API + "/videos")
     renderVideos(videos);
   });
 
-function renderVideos(list){
+function renderVideos(list) {
   videosGrid.innerHTML = "";
 
   if (!list.length) {
@@ -65,10 +93,10 @@ function renderVideos(list){
     card.innerHTML = `
       <h3>${v.name}</h3>
       <p>${v.description || ""}</p>
-      <a href="#" data-id="${v.code}">View Details</a>
+      <a href="#">View Details</a>
     `;
 
-    card.querySelector("a").onclick = (e) => {
+    card.querySelector("a").onclick = e => {
       e.preventDefault();
       openVideoModal(v);
     };
@@ -98,16 +126,16 @@ const modalContent = modalBox.querySelector("p");
 const modalTitle = modalBox.querySelector("h2");
 const modalClose = modalBox.querySelector(".close");
 
-function openVideoModal(video){
+function openVideoModal(video) {
   modalTitle.textContent = video.name;
 
   let linksHTML = "";
-  if (video.links && video.links.length){
+  if (video.links && video.links.length) {
     linksHTML = `
       <br><br>
-      ${video.links.map((l,i)=>`
-        <a href="${l}" target="_blank">Link ${i+1}</a>
-      `).join("<br>")}
+      ${video.links
+        .map((l, i) => `<a href="${l}" target="_blank">Link ${i + 1}</a>`)
+        .join("<br>")}
     `;
   }
 
@@ -126,7 +154,7 @@ modal.onclick = e => {
   if (e.target === modal) modal.classList.add("hidden");
 };
 
-/* ================= FOOTER MODALS (About / Terms) ================= */
+/* ================= FOOTER MODALS ================= */
 
 document.querySelectorAll("footer a").forEach(a => {
   a.onclick = e => {
@@ -140,12 +168,12 @@ document.querySelectorAll("footer a").forEach(a => {
 
 /* ================= JOIN STATUS (5 MIN) ================= */
 
-function showJoinStatus(){
+function showJoinStatus() {
   const join = document.createElement("div");
   join.className = "join";
 
   join.innerHTML = `
-    <img src="https://i.ibb.co/1tXTkP3N/chillaxy.gif">
+    <img src="https://cdn.discordapp.com/icons/YOUR_GUILD_ID/YOUR_ICON.gif">
     <div>
       <div>Chillaxy Community</div>
       <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Join</a>
@@ -153,19 +181,18 @@ function showJoinStatus(){
   `;
 
   document.body.appendChild(join);
-
   setTimeout(() => join.remove(), 5 * 60 * 1000);
 }
 
-/* ================= SIMULATE LOGIN ================= */
-/* لما تربطه بالأوث الحقيقي شيل الجزء ده */
+/* ================= DASHBOARD ================= */
 
-if (localStorage.getItem("logged")){
-  showJoinStatus();
+function toggleDash() {
+  if (!IS_ADMIN) return;
+  dashboardModal.classList.toggle("hidden");
 }
 
 /* ================= BRAND CLICK ================= */
 
 document.querySelector(".brand").onclick = () => {
-  window.scrollTo({ top:0, behavior:"smooth" });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
