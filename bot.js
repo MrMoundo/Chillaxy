@@ -31,51 +31,69 @@ const commands = [
     .setName("addvideo")
     .setDescription("Publish a new video")
     .addStringOption(o =>
-      o.setName("title").setDescription("Video title").setRequired(true)
+      o.setName("title")
+        .setDescription("Video title")
+        .setRequired(true)
     )
     .addStringOption(o =>
-      o.setName("youtube").setDescription("YouTube URL").setRequired(true)
+      o.setName("youtube")
+        .setDescription("YouTube URL")
+        .setRequired(true)
     )
     .addStringOption(o =>
-      o.setName("description").setDescription("Optional description")
+      o.setName("description")
+        .setDescription("Optional description")
     )
     .addStringOption(o =>
-      o.setName("links").setDescription("Extra links separated by comma")
+      o.setName("links")
+        .setDescription("Extra links separated by comma")
+    )
+    .addStringOption(o =>
+      o.setName("mention")
+        .setDescription("Role ID or 'everyone' (optional)")
     ),
 
   new SlashCommandBuilder()
     .setName("editvideo")
     .setDescription("Edit an existing video by title")
     .addStringOption(o =>
-      o.setName("title").setDescription("Current video title").setRequired(true)
+      o.setName("title")
+        .setDescription("Current video title")
+        .setRequired(true)
     )
     .addStringOption(o =>
-      o.setName("newtitle").setDescription("New title")
+      o.setName("newtitle")
+        .setDescription("New title")
     )
     .addStringOption(o =>
-      o.setName("description").setDescription("New description")
+      o.setName("description")
+        .setDescription("New description")
     )
     .addStringOption(o =>
-      o.setName("links").setDescription("New links separated by comma")
+      o.setName("links")
+        .setDescription("New links separated by comma")
     ),
 
   new SlashCommandBuilder()
     .setName("deletevideo")
     .setDescription("Delete a video by title")
     .addStringOption(o =>
-      o.setName("title").setDescription("Video title").setRequired(true)
+      o.setName("title")
+        .setDescription("Video title")
+        .setRequired(true)
     ),
 
   new SlashCommandBuilder()
     .setName("listvideos")
     .setDescription("List all videos (hidden)"),
 
-  /* ===== NEW (من غير ما نمس القديم) ===== */
   new SlashCommandBuilder()
     .setName("addbanner")
     .setDescription("Add banner to website (max 5)")
     .addStringOption(o =>
-      o.setName("image").setDescription("Banner image URL").setRequired(true)
+      o.setName("image")
+        .setDescription("Banner image URL")
+        .setRequired(true)
     )
 ].map(c => c.toJSON());
 
@@ -89,11 +107,12 @@ await rest.put(
 
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
+  if (!interaction.inGuild()) return;
 
   const member = interaction.member;
   const authorized =
     interaction.user.id === OWNER_ID ||
-    (ADMIN_ROLE_ID && member.roles.cache.has(ADMIN_ROLE_ID));
+    (ADMIN_ROLE_ID && member.roles?.cache?.has(ADMIN_ROLE_ID));
 
   if (!authorized) {
     return interaction.reply({
@@ -102,18 +121,28 @@ client.on("interactionCreate", async interaction => {
     });
   }
 
-  const videos = await fs.readJson(DATA_FILE);
-
   /* ===== ADD VIDEO ===== */
   if (interaction.commandName === "addvideo") {
+    const videos = await fs.readJson(DATA_FILE);
+
     const title = interaction.options.getString("title");
     const youtube = interaction.options.getString("youtube");
     const description = interaction.options.getString("description") || "";
     const linksRaw = interaction.options.getString("links");
+    const mentionRaw = interaction.options.getString("mention");
 
     const links = linksRaw
-      ? linksRaw.split(",").map(l => l.trim())
+      ? linksRaw.split(",").map(l => l.trim()).filter(Boolean)
       : [];
+
+    let mentionText = "";
+    if (mentionRaw) {
+      if (mentionRaw.toLowerCase() === "everyone") {
+        mentionText = "@everyone";
+      } else if (/^\d+$/.test(mentionRaw)) {
+        mentionText = `<@&${mentionRaw}>`;
+      }
+    }
 
     const video = {
       code: Date.now().toString(),
@@ -128,7 +157,7 @@ client.on("interactionCreate", async interaction => {
     videos.push(video);
     await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
 
-    /* ===== BUTTONS (زي ما إنت عايز) ===== */
+    /* ===== BUTTONS ===== */
     const buttons = links.map((link, i) =>
       new ButtonBuilder()
         .setLabel(`Link ${i + 1}`)
@@ -141,11 +170,14 @@ client.on("interactionCreate", async interaction => {
       : [];
 
     const channel = await client.channels.fetch(CHANNEL_ID);
+
     if (channel) {
       await channel.send({
-        content: `**${title}**\n${description}\n${youtube}`,
+        content: `${mentionText ? mentionText + "\n" : ""}**${title}**\n${description}\n${youtube}`,
         components: rows,
-        allowedMentions: { parse: [] }
+        allowedMentions: {
+          parse: mentionText === "@everyone" ? ["everyone"] : ["roles"]
+        }
       });
     }
 
@@ -157,18 +189,17 @@ client.on("interactionCreate", async interaction => {
 
   /* ===== EDIT VIDEO ===== */
   if (interaction.commandName === "editvideo") {
+    const videos = await fs.readJson(DATA_FILE);
     const title = interaction.options.getString("title");
+    const video = videos.find(v => v.name === title);
+
+    if (!video) {
+      return interaction.reply({ content: "Video not found.", ephemeral: true });
+    }
+
     const newTitle = interaction.options.getString("newtitle");
     const newDesc = interaction.options.getString("description");
     const linksRaw = interaction.options.getString("links");
-
-    const video = videos.find(v => v.name === title);
-    if (!video) {
-      return interaction.reply({
-        content: "Video not found.",
-        ephemeral: true
-      });
-    }
 
     if (newTitle) video.name = newTitle;
     if (newDesc !== null) video.description = newDesc;
@@ -180,62 +211,42 @@ client.on("interactionCreate", async interaction => {
 
     await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
 
-    return interaction.reply({
-      content: "Video updated successfully.",
-      ephemeral: true
-    });
+    return interaction.reply({ content: "Video updated.", ephemeral: true });
   }
 
   /* ===== DELETE VIDEO ===== */
   if (interaction.commandName === "deletevideo") {
+    const videos = await fs.readJson(DATA_FILE);
     const title = interaction.options.getString("title");
-    const filtered = videos.filter(v => v.name !== title);
 
+    const filtered = videos.filter(v => v.name !== title);
     if (filtered.length === videos.length) {
-      return interaction.reply({
-        content: "Video not found.",
-        ephemeral: true
-      });
+      return interaction.reply({ content: "Video not found.", ephemeral: true });
     }
 
     await fs.writeJson(DATA_FILE, filtered, { spaces: 2 });
-
-    return interaction.reply({
-      content: "Video deleted successfully.",
-      ephemeral: true
-    });
+    return interaction.reply({ content: "Video deleted.", ephemeral: true });
   }
 
   /* ===== LIST VIDEOS ===== */
   if (interaction.commandName === "listvideos") {
-    if (!videos.length) {
-      return interaction.reply({
-        content: "No videos found.",
-        ephemeral: true
-      });
-    }
+    const videos = await fs.readJson(DATA_FILE);
+    const list = videos.length
+      ? videos.map(v => `• ${v.name}`).join("\n")
+      : "No videos found.";
 
-    const list = videos.map(v => `• ${v.name}`).join("\n");
-    return interaction.reply({
-      content: list,
-      ephemeral: true
-    });
+    return interaction.reply({ content: list, ephemeral: true });
   }
 
   /* ===== ADD BANNER ===== */
   if (interaction.commandName === "addbanner") {
-    const image = interaction.options.getString("image");
     const banners = await fs.readJson(BANNERS_FILE);
-
-    banners.push({ url: image, time: Date.now() });
+    banners.push({ url: interaction.options.getString("image"), time: Date.now() });
     if (banners.length > 5) banners.shift();
 
     await fs.writeJson(BANNERS_FILE, banners, { spaces: 2 });
 
-    return interaction.reply({
-      content: "Banner added successfully.",
-      ephemeral: true
-    });
+    return interaction.reply({ content: "Banner added successfully.", ephemeral: true });
   }
 });
 
