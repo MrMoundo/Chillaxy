@@ -1,74 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Chillaxy</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="styles.css"/>
-</head>
-<body>
+import express from "express";
+import cors from "cors";
+import session from "express-session";
+import dotenv from "dotenv";
 
-<!-- TOP BAR -->
-<header class="topbar">
-  <div class="logo">Chillaxy</div>
-  <input id="search" placeholder="Search videos..." />
-</header>
+/* ROUTES */
+import authRoutes from "./routes/auth.js";
+import videoRoutes from "./routes/videos.js";
+import bannerRoutes from "./routes/banners.js";
 
-<!-- HERO -->
-<section class="hero">
-  <h1 class="glow">Chillaxy</h1>
-  <p>Premium Gaming & Video Platform</p>
-</section>
+/* BOT */
+import "./bot.js";
 
-<!-- JOIN STATUS (TEMP) -->
-<div id="joinStatus" class="join hidden">
-  <img src="https://i.ibb.co/1tXTkP3N/chillaxy.gif">
-  <div>
-    <strong>You are in Chillaxy Community</strong>
-    <br>
-    <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Join</a>
-  </div>
-</div>
+dotenv.config();
 
-<!-- BANNERS -->
-<section class="banners">
-  <div class="banner-track" id="banners"></div>
-</section>
+const app = express();
 
-<!-- VIDEOS -->
-<section id="videos" class="videos"></section>
+/* ================= MIDDLEWARE ================= */
+app.use(cors());
+app.use(express.json());
 
-<!-- FOOTER -->
-<footer>
-  <div>
-    <h3>Information</h3>
-    <a onclick="openModal('about-us')">About Us</a>
-    <a onclick="openModal('faq')">FAQ</a>
-    <a onclick="openModal('careers')">Careers</a>
-  </div>
-  <div>
-    <h3>Terms</h3>
-    <a onclick="openModal('privacy-policy')">Privacy Policy</a>
-    <a onclick="openModal('terms-of-service')">Terms of Service</a>
-  </div>
-  <div>
-    <h3>Socials</h3>
-    <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Discord</a>
-    <a href="https://www.youtube.com/@Mr-Moundo" target="_blank">YouTube</a>
-    <a href="https://instagram.com" target="_blank">Instagram</a>
-    <a href="https://facebook.com" target="_blank">Facebook</a>
-  </div>
-</footer>
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false
+    }
+  })
+);
 
-<!-- MODAL -->
-<div id="infoModal" class="modal hidden">
-  <div class="modal-box">
-    <button class="close" onclick="closeModal()">×</button>
-    <h2 id="modalTitle"></h2>
-    <p id="modalContent"></p>
-  </div>
-</div>
+/* ================= ROUTES ================= */
+app.use("/auth", authRoutes);
+app.use("/api/videos", videoRoutes);
+app.use("/api/banners", bannerRoutes);
 
-<script src="app.js"></script>
-</body>
-</html>
+/* ================= FRONTEND ================= */
+app.use(express.static("public"));
+
+app.get("/", (req, res) => {
+  res.sendFile(process.cwd() + "/public/index.html");
+});
+
+/* ================= START SERVER ================= */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Chillaxy Backend is running");
+});
