@@ -19,18 +19,11 @@
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="brand">Chillaxy</div>
-  <input id="search" placeholder="Search videos...">
-  <a href="/auth/login" class="login-btn">Login</a>
+  <input id="search" type="text" placeholder="Search videos...">
+  <a href="/auth/login" class="login-btn" id="loginBtn">Login</a>
 </div>
 
-<!-- USER BAR -->
-<div class="user-bar hidden" id="userBar">
-  <img id="userAvatar">
-  <span id="userName"></span>
-  <button id="adminBtn" class="hidden">Dashboard</button>
-</div>
-
-<!-- HERO -->
+<!-- HERO / BANNERS -->
 <section class="hero">
   <div class="hero-track" id="banners"></div>
   <div class="hero-overlay">
@@ -46,12 +39,48 @@
   <div class="no-results hidden" id="noResults">No videos found</div>
 </section>
 
-<!-- STATS -->
-<div class="stats hidden" id="statsBox">
+<!-- JOIN STATUS -->
+<div class="join hidden" id="joinBox">
   <img src="https://i.ibb.co/1tXTkP3N/chillaxy.gif">
-  <p>You are a member of Chillaxy Community</p>
-  <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Join</a>
+  <div>
+    <div>You are in <b>Chillaxy Community</b></div>
+    <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Join</a>
+  </div>
 </div>
+
+<!-- MODAL -->
+<div class="modal hidden" id="modal">
+  <div class="modal-box">
+    <button class="close" onclick="closeModal()">×</button>
+    <h2 id="modalTitle"></h2>
+    <p id="modalContent"></p>
+  </div>
+</div>
+
+<footer>
+  <div>
+    <h3>About</h3>
+    <a href="#" onclick="openModal('About Us', aboutText)">About Us</a>
+    <a href="#" onclick="openModal('FAQ', faqText)">FAQ</a>
+    <a href="#" onclick="openModal('Careers', careersText)">Careers</a>
+  </div>
+
+  <div>
+    <h3>Terms</h3>
+    <a href="#" onclick="openModal('Privacy Shield', privacyShield)">Privacy Shield</a>
+    <a href="#" onclick="openModal('Privacy Policy', privacyPolicy)">Privacy Policy</a>
+    <a href="#" onclick="openModal('Terms of Service', tos)">Terms of Service</a>
+  </div>
+
+  <div>
+    <h3>Socials</h3>
+    <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Discord</a>
+    <a href="https://youtube.com/@Mr-Moundo" target="_blank">YouTube</a>
+    <a href="https://twitter.com" target="_blank">Twitter</a>
+    <a href="https://instagram.com" target="_blank">Instagram</a>
+    <a href="https://facebook.com" target="_blank">Facebook</a>
+  </div>
+</footer>
 
 <script src="app.js"></script>
 </body>
