@@ -1,85 +1,75 @@
-const API = "https://chillaxy.up.railway.app/api";
-const videosEl = document.getElementById("videos");
-const search = document.getElementById("search");
-const noResults = document.getElementById("noResults");
-
-/* ===== INTRO FIX ===== */
+/* INTRO */
 window.addEventListener("load", () => {
   const intro = document.getElementById("intro");
-  setTimeout(() => {
-    intro.style.display = "none";
-  }, 2800);
+  setTimeout(() => intro.style.display = "none", 2800);
 });
 
-/* ===== LOAD VIDEOS ===== */
-let allVideos = [];
+/* USER */
+fetch("/auth/me")
+  .then(r => r.json())
+  .then(user => {
+    if (!user) return;
 
-fetch(API + "/videos")
+    const bar = document.getElementById("userBar");
+    bar.classList.remove("hidden");
+    document.getElementById("userAvatar").src = user.avatar;
+    document.getElementById("userName").innerText = user.username;
+
+    if (user.isAdmin) {
+      document.getElementById("adminBtn").classList.remove("hidden");
+      document.getElementById("adminBtn").onclick = () => {
+        window.location.href = "/dashboard.html";
+      };
+    }
+
+    const stats = document.getElementById("statsBox");
+    stats.classList.remove("hidden");
+    setTimeout(() => stats.classList.add("hidden"), 300000);
+  });
+
+/* VIDEOS */
+fetch("/api/videos")
   .then(r => r.json())
   .then(videos => {
-    allVideos = videos;
-    renderVideos(videos);
+    const grid = document.getElementById("videos");
+    const noRes = document.getElementById("noResults");
+
+    function render(list){
+      grid.innerHTML = "";
+      if(!list.length){
+        noRes.classList.remove("hidden");
+        return;
+      }
+      noRes.classList.add("hidden");
+
+      list.forEach(v => {
+        const d = document.createElement("div");
+        d.className = "card";
+        d.innerHTML = `
+          <h3>${v.name}</h3>
+          <p>${v.description || ""}</p>
+          <a href="${v.videoLink}" target="_blank">Watch</a>
+        `;
+        grid.appendChild(d);
+      });
+    }
+
+    render(videos);
+
+    document.getElementById("search").oninput = e => {
+      const q = e.target.value.toLowerCase();
+      render(videos.filter(v => v.name.toLowerCase().includes(q)));
+    };
   });
 
-function renderVideos(list){
-  videosEl.innerHTML = "";
-  if(!list.length){
-    noResults.classList.remove("hidden");
-    return;
-  }
-  noResults.classList.add("hidden");
-
-  list.forEach(v => {
-    const d = document.createElement("div");
-    d.className = "card";
-    d.innerHTML = `
-      <h3>${v.name}</h3>
-      <p>${v.description || ""}</p>
-      <a href="${v.videoLink}" target="_blank">Watch</a>
-    `;
-    videosEl.appendChild(d);
+/* BANNERS */
+fetch("/api/banners")
+  .then(r => r.json())
+  .then(banners => {
+    const track = document.getElementById("banners");
+    banners.forEach(b => {
+      const img = document.createElement("img");
+      img.src = b.url;
+      track.appendChild(img);
+    });
   });
-}
-
-/* ===== SEARCH ===== */
-search.addEventListener("input", () => {
-  const q = search.value.toLowerCase();
-  const filtered = allVideos.filter(v =>
-    v.name.toLowerCase().includes(q)
-  );
-  renderVideos(filtered);
-});
-
-/* ===== MODAL CONTENT ===== */
-const modalData = {
-  about: {
-    title: "About Chillaxy",
-    content: "Chillaxy is a premium Discord-powered platform for gaming and video content."
-  },
-  faq: {
-    title: "FAQ",
-    content: "This platform is managed through Discord bots and admin dashboards."
-  },
-  careers: {
-    title: "Careers",
-    content: "No open positions currently."
-  },
-  privacy: {
-    title: "Privacy Policy",
-    content: "We respect your privacy and do not collect personal data."
-  },
-  tos: {
-    title: "Terms of Service",
-    content: "Use content responsibly. We are not responsible for misuse."
-  }
-};
-
-function openModal(key){
-  document.getElementById("modalTitle").innerText = modalData[key].title;
-  document.getElementById("modalContent").innerText = modalData[key].content;
-  document.getElementById("modal").classList.remove("hidden");
-}
-
-function closeModal(){
-  document.getElementById("modal").classList.add("hidden");
-}
