@@ -6,8 +6,11 @@ const videosGrid = document.querySelector(".videos-grid");
 const searchInput = document.querySelector(".topbar input");
 const noResults = document.querySelector(".no-results");
 const intro = document.getElementById("intro");
+
 const authArea = document.getElementById("authArea");
 const dashboardModal = document.getElementById("dashboard");
+const dashVideos = document.getElementById("dashVideos");
+const dashSearch = document.getElementById("dashSearch");
 
 /* ================= INTRO ================= */
 
@@ -17,25 +20,21 @@ window.addEventListener("load", () => {
   }, 2800);
 });
 
-/* ================= AUTH CHECK ================= */
+/* ================= AUTH ================= */
 
 let CURRENT_USER = null;
 let IS_ADMIN = false;
 
-fetch("/api/me")
-  .then(r => {
-    if (r.status === 401) return null;
-    return r.json();
-  })
+fetch("/auth/me")
+  .then(r => r.json())
   .then(user => {
     if (!user) return;
 
     CURRENT_USER = user;
     IS_ADMIN = user.isAdmin;
 
-    // UI
     authArea.innerHTML = `
-      <span class="user-name">👋 ${user.id}</span>
+      <span class="user-name">👋 ${user.username}</span>
       ${IS_ADMIN ? `<button class="login-btn" onclick="toggleDash()">Dashboard</button>` : ""}
       <a href="/auth/logout" class="login-btn">Logout</a>
     `;
@@ -43,7 +42,7 @@ fetch("/api/me")
     showJoinStatus();
   });
 
-/* ================= HERO SLIDER ================= */
+/* ================= HERO ================= */
 
 let heroIndex = 0;
 const heroTrack = document.querySelector(".hero-track");
@@ -65,7 +64,7 @@ fetch(API + "/banners")
     }, 5000);
   });
 
-/* ================= LOAD VIDEOS ================= */
+/* ================= VIDEOS ================= */
 
 let ALL_VIDEOS = [];
 
@@ -74,6 +73,7 @@ fetch(API + "/videos")
   .then(videos => {
     ALL_VIDEOS = videos;
     renderVideos(videos);
+    renderDash(videos);
   });
 
 function renderVideos(list) {
@@ -93,13 +93,8 @@ function renderVideos(list) {
     card.innerHTML = `
       <h3>${v.name}</h3>
       <p>${v.description || ""}</p>
-      <a href="#">View Details</a>
+      <a href="${v.videoLink}" target="_blank">Watch</a>
     `;
-
-    card.querySelector("a").onclick = e => {
-      e.preventDefault();
-      openVideoModal(v);
-    };
 
     videosGrid.appendChild(card);
   });
@@ -109,71 +104,22 @@ function renderVideos(list) {
 
 searchInput.addEventListener("input", e => {
   const q = e.target.value.toLowerCase();
-
-  const filtered = ALL_VIDEOS.filter(v =>
-    v.name.toLowerCase().includes(q) ||
-    (v.description && v.description.toLowerCase().includes(q))
+  renderVideos(
+    ALL_VIDEOS.filter(v =>
+      v.name.toLowerCase().includes(q) ||
+      (v.description && v.description.toLowerCase().includes(q))
+    )
   );
-
-  renderVideos(filtered);
 });
 
-/* ================= VIDEO MODAL ================= */
-
-const modal = document.querySelector(".modal");
-const modalBox = document.querySelector(".modal-box");
-const modalContent = modalBox.querySelector("p");
-const modalTitle = modalBox.querySelector("h2");
-const modalClose = modalBox.querySelector(".close");
-
-function openVideoModal(video) {
-  modalTitle.textContent = video.name;
-
-  let linksHTML = "";
-  if (video.links && video.links.length) {
-    linksHTML = `
-      <br><br>
-      ${video.links
-        .map((l, i) => `<a href="${l}" target="_blank">Link ${i + 1}</a>`)
-        .join("<br>")}
-    `;
-  }
-
-  modalContent.innerHTML = `
-    ${video.description || ""}
-    <br><br>
-    <a href="${video.videoLink}" target="_blank">Watch Video</a>
-    ${linksHTML}
-  `;
-
-  modal.classList.remove("hidden");
-}
-
-modalClose.onclick = () => modal.classList.add("hidden");
-modal.onclick = e => {
-  if (e.target === modal) modal.classList.add("hidden");
-};
-
-/* ================= FOOTER MODALS ================= */
-
-document.querySelectorAll("footer a").forEach(a => {
-  a.onclick = e => {
-    if (!a.dataset.text) return;
-    e.preventDefault();
-    modalTitle.textContent = a.textContent;
-    modalContent.textContent = a.dataset.text;
-    modal.classList.remove("hidden");
-  };
-});
-
-/* ================= JOIN STATUS (5 MIN) ================= */
+/* ================= JOIN STATUS ================= */
 
 function showJoinStatus() {
   const join = document.createElement("div");
   join.className = "join";
 
   join.innerHTML = `
-    <img src="https://cdn.discordapp.com/icons/YOUR_GUILD_ID/YOUR_ICON.gif">
+    <img src="https://cdn.discordapp.com/embed/avatars/0.png">
     <div>
       <div>Chillaxy Community</div>
       <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Join</a>
@@ -191,7 +137,55 @@ function toggleDash() {
   dashboardModal.classList.toggle("hidden");
 }
 
-/* ================= BRAND CLICK ================= */
+function renderDash(list) {
+  dashVideos.innerHTML = "";
+
+  if (!list.length) {
+    dashVideos.innerHTML = "<p style='color:#aaa'>No videos</p>";
+    return;
+  }
+
+  list.forEach(v => {
+    const d = document.createElement("div");
+    d.className = "card";
+
+    d.innerHTML = `
+      <h3 contenteditable onblur="editVideo('${v.code}','name',this.innerText)">
+        ${v.name}
+      </h3>
+      <p contenteditable onblur="editVideo('${v.code}','description',this.innerText)">
+        ${v.description || ""}
+      </p>
+      <button class="delete" onclick="deleteVideo('${v.code}')">Delete</button>
+    `;
+
+    dashVideos.appendChild(d);
+  });
+}
+
+dashSearch.oninput = e => {
+  const q = e.target.value.toLowerCase();
+  renderDash(ALL_VIDEOS.filter(v => v.name.toLowerCase().includes(q)));
+};
+
+function editVideo(code, field, value) {
+  fetch(API + "/videos/" + code, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ [field]: value })
+  });
+}
+
+function deleteVideo(code) {
+  fetch(API + "/videos/" + code, { method: "DELETE" })
+    .then(() => {
+      ALL_VIDEOS = ALL_VIDEOS.filter(v => v.code !== code);
+      renderVideos(ALL_VIDEOS);
+      renderDash(ALL_VIDEOS);
+    });
+}
+
+/* ================= BRAND ================= */
 
 document.querySelector(".brand").onclick = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
