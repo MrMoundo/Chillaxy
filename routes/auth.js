@@ -11,22 +11,27 @@ router.get("/login", (req, res) => {
     scope: "identify",
     redirect_uri: process.env.REDIRECT_URI
   });
-  res.redirect(`https://discord.com/oauth2/authorize?${params}`);
+
+  res.redirect(
+    `https://discord.com/oauth2/authorize?${params.toString()}`
+  );
 });
 
 router.get("/callback", async (req, res) => {
   const code = req.query.code;
+  if (!code) return res.redirect("/");
+
+  const params = new URLSearchParams();
+  params.append("client_id", process.env.CLIENT_ID);
+  params.append("client_secret", process.env.CLIENT_SECRET);
+  params.append("grant_type", "authorization_code");
+  params.append("code", code);
+  params.append("redirect_uri", process.env.REDIRECT_URI);
 
   const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: process.env.REDIRECT_URI
-    })
+    body: params
   });
 
   const token = await tokenRes.json();
@@ -36,20 +41,16 @@ router.get("/callback", async (req, res) => {
   });
 
   const user = await userRes.json();
+
   const admins = await fs.readJson(ADMINS_FILE);
+  if (!admins.includes(user.id)) {
+    return res.send("Unauthorized");
+  }
 
-  req.session.user = {
-    id: user.id,
-    username: user.username,
-    avatar: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`,
-    isAdmin: admins.includes(user.id)
-  };
+  req.session.user = user.id;
+  console.log("LOGIN USER:", user.id);
 
-  res.redirect("/");
-});
-
-router.get("/me", (req, res) => {
-  res.json(req.session.user || null);
+  res.redirect("/dashboard.html");
 });
 
 router.get("/logout", (req, res) => {
