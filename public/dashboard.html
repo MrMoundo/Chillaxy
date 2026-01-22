@@ -8,147 +8,187 @@
 body{
   margin:0;
   font-family:Inter,Arial;
-  background:#0b0f1a;
-  color:#fff;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);
 }
+
+/* MODAL */
+.dashboard{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+.panel{
+  background:#121214;
+  width:90%;
+  max-width:900px;
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);
+  overflow:hidden;
+  animation:fade .3s ease;
+}
+
 header{
-  padding:20px;
-  font-size:28px;
-  font-weight:700;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px 24px;
+  border-bottom:1px solid #1f1f22;
 }
+
+header h2{
+  margin:0;
+  color:#b24cff;
+}
+
+.close{
+  background:none;
+  border:none;
+  font-size:26px;
+  color:#aaa;
+  cursor:pointer;
+}
+
+/* CONTENT */
+.content{
+  padding:20px;
+  max-height:70vh;
+  overflow:auto;
+}
+
+.card{
+  background:#18181b;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px;
+}
+
+.card h3{
+  margin:0 0 6px;
+}
+
+.card p{
+  color:#aaa;
+  font-size:14px;
+}
+
+.actions{
+  margin-top:10px;
+}
+
+button{
+  background:#b24cff;
+  border:none;
+  color:#fff;
+  padding:6px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-right:6px;
+  font-size:13px;
+}
+
+button.delete{
+  background:#ff4b4b;
+}
+
+/* SEARCH */
 input{
   width:100%;
   padding:10px;
-  margin:10px 0;
-  border-radius:6px;
+  border-radius:10px;
   border:none;
-}
-.card{
-  background:#141a2e;
-  padding:16px;
-  margin:16px;
-  border-radius:12px;
-  animation:fade .3s ease;
-}
-button{
-  background:#ff0000;
-  border:none;
+  background:#1b1b1f;
   color:#fff;
-  padding:8px 14px;
-  border-radius:6px;
-  cursor:pointer;
-  margin-right:6px;
+  margin-bottom:16px;
 }
-.toast{
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  background:#141a2e;
-  padding:12px 18px;
-  border-radius:8px;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-  animation:toast .4s ease;
-}
-.toast.success{border-left:4px solid #00ff9c;}
-.toast.error{border-left:4px solid #ff4b4b;}
+
 @keyframes fade{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1}
-}
-@keyframes toast{
-  from{opacity:0;transform:translateY(20px)}
+  from{opacity:0;transform:scale(.95)}
   to{opacity:1}
 }
 </style>
 </head>
 <body>
 
-<header>Chillaxy Dashboard</header>
+<div class="dashboard">
+  <div class="panel">
+    <header>
+      <h2>Chillaxy Dashboard</h2>
+      <button class="close" onclick="closeDash()">×</button>
+    </header>
 
-<div style="padding:16px">
-  <input id="search" placeholder="Search videos..." onkeyup="render()">
+    <div class="content">
+      <input id="search" placeholder="Search videos...">
+
+      <div id="videos"></div>
+    </div>
+  </div>
 </div>
-
-<div id="videos"></div>
-
-<hr style="border:1px solid #222">
-
-<div style="padding:16px">
-  <h3>Add Admin</h3>
-  <input id="adminId" placeholder="Discord User ID">
-  <button onclick="addAdmin()">Add</button>
-</div>
-
-<div id="toast"></div>
 
 <script>
 const API="/api/videos";
-let videos=[];
+const wrap=document.getElementById("videos");
+let ALL=[];
 
-const toast=(msg,type="success")=>{
-  const t=document.createElement("div");
-  t.className=`toast ${type}`;
-  t.innerText=msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2500);
-};
+fetch(API)
+.then(r=>r.json())
+.then(v=>{
+  ALL=v;
+  render(v);
+});
 
-async function load(){
-  videos=await fetch(API).then(r=>r.json());
-  render();
-}
-
-function render(){
-  const q=document.getElementById("search").value.toLowerCase();
-  const wrap=document.getElementById("videos");
+function render(list){
   wrap.innerHTML="";
-  videos.filter(v=>v.name.toLowerCase().includes(q)).forEach(v=>{
+  if(!list.length){
+    wrap.innerHTML="<p style='color:#aaa'>No videos found</p>";
+    return;
+  }
+  list.forEach(v=>{
     const d=document.createElement("div");
     d.className="card";
     d.innerHTML=`
-      <h2 contenteditable onblur="edit('${v.code}','name',this.innerText)">
+      <h3 contenteditable onblur="edit('${v.code}','name',this.innerText)">
         ${v.name}
-      </h2>
+      </h3>
       <p contenteditable onblur="edit('${v.code}','description',this.innerText)">
         ${v.description||""}
       </p>
-      <button onclick="del('${v.code}')">Delete</button>
+      <div class="actions">
+        <button class="delete" onclick="del('${v.code}')">Delete</button>
+      </div>
     `;
     wrap.appendChild(d);
   });
 }
+
+document.getElementById("search").oninput=e=>{
+  const q=e.target.value.toLowerCase();
+  render(ALL.filter(v=>v.name.toLowerCase().includes(q)));
+};
 
 function edit(code,field,value){
   fetch(API+"/"+code,{
     method:"PUT",
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({[field]:value})
-  }).then(()=>toast("Saved"));
+  });
 }
 
 function del(code){
   fetch(API+"/"+code,{method:"DELETE"})
-    .then(()=>{
-      toast("Video deleted");
-      load();
-    });
-}
-
-function addAdmin(){
-  const id=document.getElementById("adminId").value;
-  if(!id) return toast("Invalid ID","error");
-
-  fetch("/api/admins",{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({id})
-  }).then(()=>{
-    toast("Admin added");
-    document.getElementById("adminId").value="";
+  .then(()=>{
+    ALL=ALL.filter(v=>v.code!==code);
+    render(ALL);
   });
 }
 
-load();
+function closeDash(){
+  window.location.href="/";
+}
 </script>
 
 </body>
