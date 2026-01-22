@@ -1,18 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Chillaxy</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- ✅ صح -->
-  <link rel="stylesheet" href="/styles.css">
-  <script src="/app.js" defer></script>
+<meta charset="UTF-8">
+<title>Chillaxy</title>
+<link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
 
-<!-- INTRO -->
 <div id="intro">
   <div class="intro-inner">
     <div class="intro-logo">CHILLAXY</div>
@@ -20,31 +14,33 @@
   </div>
 </div>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <div class="brand">CHILLAXY</div>
-  <input type="text" placeholder="Search videos...">
+  <input placeholder="Search videos...">
+
   <a href="/auth/login" class="login-btn" id="loginBtn">Login</a>
-  <div id="userBox" class="hidden"></div>
+
+  <div id="userBox" class="hidden">
+    <span id="username"></span>
+    <button id="dashBtn" class="hidden">Dashboard</button>
+    <a href="/auth/logout" class="logout">Logout</a>
+  </div>
 </div>
 
-<!-- HERO -->
-<section class="hero">
+<div class="hero">
   <div class="hero-track"></div>
   <div class="hero-overlay">
-    <h1>Premium Gaming Content</h1>
-    <p>Exclusive videos & resources</p>
+    <h1>Premium Videos</h1>
+    <p>Chill. Watch. Enjoy.</p>
   </div>
-</section>
+</div>
 
-<!-- VIDEOS -->
 <section class="videos-section">
   <h2>Videos</h2>
   <div class="videos-grid"></div>
   <div class="no-results hidden">No results</div>
 </section>
 
-<!-- MODAL -->
 <div class="modal hidden">
   <div class="modal-box">
     <button class="close">×</button>
@@ -53,27 +49,6 @@
   </div>
 </div>
 
-<!-- FOOTER -->
-<footer>
-  <div>
-    <h3>About</h3>
-    <a href="#" data-text="Welcome to Chillaxy Community.">About Us</a>
-    <a href="#" data-text="Frequently asked questions.">FAQ</a>
-    <a href="#" data-text="No careers available now.">Careers</a>
-  </div>
-
-  <div>
-    <h3>Legal</h3>
-    <a href="#" data-text="We respect your privacy.">Privacy Policy</a>
-    <a href="#" data-text="Use at your own risk.">Terms of Service</a>
-  </div>
-
-  <div>
-    <h3>Socials</h3>
-    <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Discord</a>
-    <a href="https://www.youtube.com/@Mr-Moundo" target="_blank">YouTube</a>
-  </div>
-</footer>
-
+<script src="app.js"></script>
 </body>
 </html>
