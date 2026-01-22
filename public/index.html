@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Chillaxy</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="styles.css"/>
+<meta charset="UTF-8">
+<title>Chillaxy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- ===== INTRO ===== -->
+<!-- INTRO -->
 <div id="intro">
   <div class="intro-inner">
     <div class="intro-logo">CHILLAXY</div>
@@ -16,59 +16,41 @@
   </div>
 </div>
 
-<!-- ===== TOPBAR ===== -->
-<header class="topbar">
-  <div class="brand">CHILLAXY</div>
-  <input id="search" placeholder="Search videos..." />
-  <a href="/auth/login" class="login-btn">Login with Discord</a>
-</header>
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">Chillaxy</div>
+  <input id="search" placeholder="Search videos...">
+  <a href="/auth/login" class="login-btn">Login</a>
+</div>
 
-<!-- ===== HERO ===== -->
+<!-- USER BAR -->
+<div class="user-bar hidden" id="userBar">
+  <img id="userAvatar">
+  <span id="userName"></span>
+  <button id="adminBtn" class="hidden">Dashboard</button>
+</div>
+
+<!-- HERO -->
 <section class="hero">
-  <div class="hero-track" id="hero-track"></div>
+  <div class="hero-track" id="banners"></div>
   <div class="hero-overlay">
-    <h1>Premium Gaming & Video Content</h1>
-    <p>Powered by Discord • Managed by Chillaxy</p>
+    <h1>Chillaxy</h1>
+    <p>Premium videos & community content</p>
   </div>
 </section>
 
-<!-- ===== VIDEOS ===== -->
+<!-- VIDEOS -->
 <section class="videos-section">
   <h2>Videos</h2>
-  <div id="videos" class="videos-grid"></div>
-  <div id="noResults" class="no-results hidden">
-    No videos found
-  </div>
+  <div class="videos-grid" id="videos"></div>
+  <div class="no-results hidden" id="noResults">No videos found</div>
 </section>
 
-<!-- ===== FOOTER ===== -->
-<footer>
-  <div>
-    <h3>About</h3>
-    <a href="#" onclick="openModal('about')">About Us</a>
-    <a href="#" onclick="openModal('faq')">FAQ</a>
-    <a href="#" onclick="openModal('careers')">Careers</a>
-  </div>
-  <div>
-    <h3>Terms</h3>
-    <a href="#" onclick="openModal('privacy')">Privacy Policy</a>
-    <a href="#" onclick="openModal('tos')">Terms of Service</a>
-  </div>
-  <div>
-    <h3>Socials</h3>
-    <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Discord</a>
-    <a href="https://www.youtube.com/@Mr-Moundo" target="_blank">YouTube</a>
-    <a href="#">Twitter</a>
-  </div>
-</footer>
-
-<!-- ===== MODAL ===== -->
-<div id="modal" class="modal hidden">
-  <div class="modal-box">
-    <button class="close" onclick="closeModal()">✕</button>
-    <h3 id="modalTitle"></h3>
-    <p id="modalContent"></p>
-  </div>
+<!-- STATS -->
+<div class="stats hidden" id="statsBox">
+  <img src="https://i.ibb.co/1tXTkP3N/chillaxy.gif">
+  <p>You are a member of Chillaxy Community</p>
+  <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Join</a>
 </div>
 
 <script src="app.js"></script>
