@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Chillaxy</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<!-- INTRO -->
 <div id="intro">
   <div class="intro-inner">
     <div class="intro-logo">CHILLAXY</div>
@@ -16,67 +15,28 @@
   </div>
 </div>
 
-<!-- TOPBAR -->
-<header class="topbar">
-  <a href="/" class="brand neon-text">Chillaxy</a>
-  <input id="search" type="text" placeholder="Search videos...">
-  <a href="/auth/login" id="loginBtn" class="login-btn neon-btn">Login</a>
-  <a href="/dashboard.html" id="dashboardBtn" class="login-btn neon-btn hidden">Dashboard</a>
-</header>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-content">
-    <h1 class="neon-text">Chillaxy</h1>
-    <p>Premium videos, gaming vibes & community power</p>
+<div class="topbar">
+  <div class="brand" onclick="location.href='/'">CHILLAXY</div>
+  <input id="search" placeholder="Search videos...">
+  <div id="authArea">
+    <a href="/auth/login" class="login-btn">Login</a>
   </div>
-</section>
+</div>
 
-<!-- VIDEOS -->
 <section class="videos-section">
-  <h2 class="neon-text">Videos</h2>
+  <h2>Videos</h2>
   <div class="videos-grid" id="videos"></div>
-  <div id="noResults" class="no-results hidden">No videos found</div>
+  <div class="no-results hidden" id="noResults">No results</div>
 </section>
 
-<!-- JOIN STATUS -->
-<div class="join hidden" id="joinBox">
-  <img src="https://i.ibb.co/1tXTkP3N/chillaxy.gif">
-  <div>
-    <strong class="neon-text">Chillaxy Community</strong>
-    <a class="neon-link" href="https://discord.gg/TVPmfTdKQ9" target="_blank">Join</a>
+<!-- DASHBOARD -->
+<div id="dashboard" class="modal hidden">
+  <div class="modal-box" style="max-width:900px">
+    <button class="close" onclick="toggleDash()">×</button>
+    <h2>Admin Dashboard</h2>
+    <div id="adminVideos"></div>
   </div>
 </div>
-
-<!-- MODAL -->
-<div class="modal hidden" id="modal">
-  <div class="modal-box">
-    <button class="close" onclick="closeModal()">×</button>
-    <h2 id="modalTitle" class="neon-text"></h2>
-    <p id="modalContent"></p>
-  </div>
-</div>
-
-<footer>
-  <div>
-    <h3 class="neon-text">About</h3>
-    <a onclick="openModal('About Us', aboutText)">About Us</a>
-    <a onclick="openModal('FAQ', faqText)">FAQ</a>
-    <a onclick="openModal('Careers', careersText)">Careers</a>
-  </div>
-  <div>
-    <h3 class="neon-text">Terms</h3>
-    <a onclick="openModal('Privacy Policy', privacyPolicy)">Privacy Policy</a>
-    <a onclick="openModal('Terms of Service', tos)">Terms of Service</a>
-  </div>
-  <div>
-    <h3 class="neon-text">Socials</h3>
-    <a href="#">Discord</a>
-    <a href="#">YouTube</a>
-    <a href="#">Twitter</a>
-  </div>
-</footer>
 
 <script src="app.js"></script>
 </body>
