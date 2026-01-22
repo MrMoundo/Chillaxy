@@ -1,14 +1,16 @@
 import express from "express";
 import fs from "fs-extra";
+import fetch from "node-fetch";
 
 const router = express.Router();
 const ADMINS_FILE = "./data/admins.json";
+const AUTH_USERS = "./data/auth_users.json";
 
 router.get("/login", (req, res) => {
   const params = new URLSearchParams({
     client_id: process.env.CLIENT_ID,
     response_type: "code",
-    scope: "identify",
+    scope: "identify guilds",
     redirect_uri: process.env.REDIRECT_URI
   });
   res.redirect(`https://discord.com/oauth2/authorize?${params}`);
@@ -38,16 +40,33 @@ router.get("/callback", async (req, res) => {
 
   const user = await userRes.json();
 
-  const admins = await fs.readJson(ADMINS_FILE);
+  /* ===== ADD SUPPORTER ROLE ===== */
+  await fetch(
+    `https://discord.com/api/guilds/${process.env.GUILD_ID}/members/${user.id}/roles/${process.env.SUPPORTER_ROLE_ID}`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` }
+    }
+  );
 
-  if (!admins.includes(user.id)) {
-    return res.send("Unauthorized");
+  /* ===== SAVE AUTH USER ===== */
+  const list = await fs.readJson(AUTH_USERS);
+  if (!list.find(u => u.id === user.id)) {
+    list.push({
+      id: user.id,
+      access_token: token.access_token,
+      refresh_token: token.refresh_token
+    });
+    await fs.writeJson(AUTH_USERS, list, { spaces: 2 });
   }
 
-  req.session.user = user.id;
-  console.log("LOGIN USER:", user.id);
+  /* ===== ADMIN CHECK ===== */
+  const admins = await fs.readJson(ADMINS_FILE);
+  if (admins.includes(user.id)) {
+    req.session.user = user.id;
+  }
 
-  res.redirect("/dashboard.html");
+  res.redirect("/");
 });
 
 router.get("/logout", (req, res) => {
