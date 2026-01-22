@@ -1,101 +1,171 @@
-/* ================= INTRO ================= */
+/* ================= CONFIG ================= */
+
+const API = "https://chillaxy.up.railway.app/api";
+
+const videosGrid = document.querySelector(".videos-grid");
+const searchInput = document.querySelector(".topbar input");
+const noResults = document.querySelector(".no-results");
+const intro = document.getElementById("intro");
+
+/* ================= INTRO FIX ================= */
+
 window.addEventListener("load", () => {
   setTimeout(() => {
-    const intro = document.getElementById("intro");
-    if (intro) intro.style.display = "none";
+    intro.style.display = "none";
   }, 2800);
 });
 
-/* ================= MODAL ================= */
-function openModal(title, content) {
-  document.getElementById("modalTitle").innerText = title;
-  document.getElementById("modalContent").innerText = content;
-  document.getElementById("modal").classList.remove("hidden");
-}
+/* ================= HERO SLIDER ================= */
 
-function closeModal() {
-  document.getElementById("modal").classList.add("hidden");
-}
+let heroIndex = 0;
+const heroTrack = document.querySelector(".hero-track");
 
-/* ================= TEXT ================= */
-const aboutText = `Welcome to Chillaxy Community!
-We are a place for gamers and creators to connect safely.`;
-
-const faqText = `1. What is Chillaxy?
-A safe Discord-based community.
-2. Why no self bots?
-They break Discord rules.`;
-
-const careersText = `Currently no open positions.
-Stay tuned!`;
-
-const privacyShield = `We protect your privacy seriously.
-Never share your personal data.`;
-
-const privacyPolicy = `No personal data is collected.
-Report suspicious activity.`;
-
-const tos = `Tools are for learning only.
-We are not responsible for bans.`;
-
-/* ================= VIDEOS ================= */
-let allVideos = [];
-
-fetch("/api/videos")
-  .then(r => r.json())
-  .then(videos => {
-    allVideos = videos;
-    renderVideos(videos);
-  });
-
-function renderVideos(list) {
-  const grid = document.getElementById("videos");
-  const noRes = document.getElementById("noResults");
-  grid.innerHTML = "";
-
-  if (!list.length) {
-    noRes.classList.remove("hidden");
-    return;
-  }
-
-  noRes.classList.add("hidden");
-
-  list.forEach(v => {
-    const d = document.createElement("div");
-    d.className = "card";
-    d.innerHTML = `
-      <h3>${v.name}</h3>
-      <p>${v.description || ""}</p>
-      <a href="${v.videoLink}" target="_blank">Watch</a>
-    `;
-    grid.appendChild(d);
-  });
-}
-
-document.getElementById("search").addEventListener("input", e => {
-  const q = e.target.value.toLowerCase();
-  renderVideos(allVideos.filter(v => v.name.toLowerCase().includes(q)));
-});
-
-/* ================= BANNERS ================= */
-fetch("/api/banners")
+fetch(API + "/banners")
   .then(r => r.json())
   .then(banners => {
-    const track = document.getElementById("banners");
+    if (!banners.length) return;
+
     banners.forEach(b => {
       const img = document.createElement("img");
       img.src = b.url;
-      track.appendChild(img);
+      heroTrack.appendChild(img);
     });
+
+    setInterval(() => {
+      heroIndex = (heroIndex + 1) % banners.length;
+      heroTrack.style.transform = `translateX(-${heroIndex * 100}vw)`;
+    }, 5000);
   });
 
-/* ================= USER STATUS ================= */
-fetch("/auth/me")
+/* ================= LOAD VIDEOS ================= */
+
+let ALL_VIDEOS = [];
+
+fetch(API + "/videos")
   .then(r => r.json())
-  .then(user => {
-    if (!user) return;
-    document.getElementById("loginBtn").style.display = "none";
-    const join = document.getElementById("joinBox");
-    join.classList.remove("hidden");
-    setTimeout(() => join.classList.add("hidden"), 300000);
+  .then(videos => {
+    ALL_VIDEOS = videos;
+    renderVideos(videos);
   });
+
+function renderVideos(list){
+  videosGrid.innerHTML = "";
+
+  if (!list.length) {
+    noResults.classList.remove("hidden");
+    return;
+  }
+
+  noResults.classList.add("hidden");
+
+  list.forEach(v => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <h3>${v.name}</h3>
+      <p>${v.description || ""}</p>
+      <a href="#" data-id="${v.code}">View Details</a>
+    `;
+
+    card.querySelector("a").onclick = (e) => {
+      e.preventDefault();
+      openVideoModal(v);
+    };
+
+    videosGrid.appendChild(card);
+  });
+}
+
+/* ================= SEARCH ================= */
+
+searchInput.addEventListener("input", e => {
+  const q = e.target.value.toLowerCase();
+
+  const filtered = ALL_VIDEOS.filter(v =>
+    v.name.toLowerCase().includes(q) ||
+    (v.description && v.description.toLowerCase().includes(q))
+  );
+
+  renderVideos(filtered);
+});
+
+/* ================= VIDEO MODAL ================= */
+
+const modal = document.querySelector(".modal");
+const modalBox = document.querySelector(".modal-box");
+const modalContent = modalBox.querySelector("p");
+const modalTitle = modalBox.querySelector("h2");
+const modalClose = modalBox.querySelector(".close");
+
+function openVideoModal(video){
+  modalTitle.textContent = video.name;
+
+  let linksHTML = "";
+  if (video.links && video.links.length){
+    linksHTML = `
+      <br><br>
+      ${video.links.map((l,i)=>`
+        <a href="${l}" target="_blank">Link ${i+1}</a>
+      `).join("<br>")}
+    `;
+  }
+
+  modalContent.innerHTML = `
+    ${video.description || ""}
+    <br><br>
+    <a href="${video.videoLink}" target="_blank">Watch Video</a>
+    ${linksHTML}
+  `;
+
+  modal.classList.remove("hidden");
+}
+
+modalClose.onclick = () => modal.classList.add("hidden");
+modal.onclick = e => {
+  if (e.target === modal) modal.classList.add("hidden");
+};
+
+/* ================= FOOTER MODALS (About / Terms) ================= */
+
+document.querySelectorAll("footer a").forEach(a => {
+  a.onclick = e => {
+    if (!a.dataset.text) return;
+    e.preventDefault();
+    modalTitle.textContent = a.textContent;
+    modalContent.textContent = a.dataset.text;
+    modal.classList.remove("hidden");
+  };
+});
+
+/* ================= JOIN STATUS (5 MIN) ================= */
+
+function showJoinStatus(){
+  const join = document.createElement("div");
+  join.className = "join";
+
+  join.innerHTML = `
+    <img src="https://i.ibb.co/1tXTkP3N/chillaxy.gif">
+    <div>
+      <div>Chillaxy Community</div>
+      <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Join</a>
+    </div>
+  `;
+
+  document.body.appendChild(join);
+
+  setTimeout(() => join.remove(), 5 * 60 * 1000);
+}
+
+/* ================= SIMULATE LOGIN ================= */
+/* لما تربطه بالأوث الحقيقي شيل الجزء ده */
+
+if (localStorage.getItem("logged")){
+  showJoinStatus();
+}
+
+/* ================= BRAND CLICK ================= */
+
+document.querySelector(".brand").onclick = () => {
+  window.scrollTo({ top:0, behavior:"smooth" });
+};
