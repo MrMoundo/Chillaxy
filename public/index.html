@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chillaxy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<!-- ================= INTRO ================= -->
+<div id="intro">
+  <div class="intro-inner">
+    <div class="intro-logo">CHILLAXY</div>
+    <div class="intro-bar"></div>
+  </div>
+</div>
+
+<!-- ================= TOP BAR ================= -->
+<header class="topbar">
+  <div class="brand">Chillaxy</div>
+
+  <input 
+    id="search" 
+    type="text" 
+    placeholder="Search videos..."
+    autocomplete="off"
+  />
+
+  <div class="auth">
+    <a href="/auth/login" class="login-btn">Login with Discord</a>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-track" id="banners"></div>
+
+  <div class="hero-overlay">
+    <h1>Upgrade Your Experience</h1>
+    <p>Premium gaming & video content curated for you</p>
+  </div>
+</section>
+
+<!-- ================= VIDEOS ================= -->
+<section class="videos-section">
+  <h2>All Videos</h2>
+
+  <div id="videos" class="videos-grid"></div>
+  <div id="no-results" class="no-results hidden">
+    No results found
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="footer-col">
+    <h3>About Chillaxy</h3>
+    <p>
+      Chillaxy is a premium community-driven platform focused on
+      gaming, videos, and a smooth digital experience.
+    </p>
+  </div>
+
+  <div class="footer-col">
+    <h3>Socials</h3>
+    <a href="https://discord.gg/TVPmfTdKQ9" target="_blank">Discord</a>
+    <a href="https://www.youtube.com/@Mr-Moundo" target="_blank">YouTube</a>
+    <a href="#">TikTok</a>
+    <a href="#">Instagram</a>
+    <a href="#">Facebook</a>
+  </div>
+
+  <div class="footer-col">
+    <h3>Legal</h3>
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms of Service</a>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
