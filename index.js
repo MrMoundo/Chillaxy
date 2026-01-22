@@ -1,43 +1,35 @@
 import express from "express";
 import session from "express-session";
 import path from "path";
-import { fileURLToPath } from "url";
-
 import authRoutes from "./routes/auth.js";
-import videoRoutes from "./routes/videos.js";
-import bannerRoutes from "./routes/banners.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import videosRoutes from "./routes/videos.js";
+import bannersRoutes from "./routes/banners.js";
 
 const app = express();
 
-/* ===== SESSION ===== */
-app.use(session({
-  secret: process.env.SESSION_SECRET || "chillaxy_secret",
-  resave: false,
-  saveUninitialized: false
-}));
-
-/* ===== MIDDLEWARE ===== */
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 
-/* ===== STATIC FRONTEND ===== */
-app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false
+  })
+);
 
-/* ===== API ROUTES ===== */
 app.use("/auth", authRoutes);
-app.use("/api/videos", videoRoutes);
-app.use("/api/banners", bannerRoutes);
+app.use("/api/videos", videosRoutes);
+app.use("/api/banners", bannersRoutes);
 
-/* ===== FALLBACK ===== */
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+/* 🔒 Protect dashboard */
+app.get("/dashboard.html", (req, res, next) => {
+  if (!req.session.user || !req.session.user.isAdmin) {
+    return res.redirect("/");
+  }
+  next();
 });
 
-/* ===== START ===== */
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Chillaxy Backend running on port", PORT);
+app.listen(process.env.PORT || 3000, () => {
+  console.log("Chillaxy Backend is running");
 });
