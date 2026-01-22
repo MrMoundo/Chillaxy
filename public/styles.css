@@ -30,19 +30,17 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  z-index:999;
+  z-index:9999;
 }
 
-.intro-inner{
-  text-align:center;
-}
+.intro-inner{text-align:center}
 
 .intro-logo{
   font-size:64px;
   font-weight:900;
   letter-spacing:6px;
   color:var(--accent);
-  animation:introLogo 2.5s ease forwards;
+  animation:introLogo 2.8s ease forwards;
 }
 
 .intro-bar{
@@ -50,19 +48,19 @@ body{
   height:4px;
   background:var(--accent);
   margin:20px auto 0;
-  animation:introBar 2.5s ease forwards;
+  animation:introBar 2.8s ease forwards;
 }
 
 @keyframes introLogo{
   0%{opacity:0;transform:scale(.9)}
-  30%{opacity:1}
+  40%{opacity:1}
   70%{transform:scale(1.05)}
   100%{opacity:0}
 }
 
 @keyframes introBar{
   0%{width:0}
-  60%{width:200px}
+  60%{width:220px}
   100%{width:0}
 }
 
@@ -149,6 +147,39 @@ body{
   max-width:420px;
 }
 
+/* ================= JOIN STATUS ================= */
+
+.join{
+  position:fixed;
+  bottom:20px;
+  left:20px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  padding:14px 18px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  box-shadow:0 20px 40px rgba(0,0,0,.6);
+  animation:slideIn .4s ease;
+}
+
+.join img{
+  width:48px;
+  height:48px;
+}
+
+.join a{
+  color:var(--accent);
+  text-decoration:none;
+  font-weight:600;
+}
+
+@keyframes slideIn{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1}
+}
+
 /* ================= VIDEOS ================= */
 
 .videos-section{
@@ -200,8 +231,56 @@ body{
   margin-top:40px;
 }
 
-.hidden{
-  display:none;
+/* ================= MODAL ================= */
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.modal.hidden{display:none}
+
+.modal-box{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:20px;
+  max-width:520px;
+  width:90%;
+  padding:28px;
+  position:relative;
+  animation:fadeScale .25s ease;
+}
+
+.modal-box h2{
+  margin-top:0;
+  color:var(--accent);
+}
+
+.modal-box p{
+  color:var(--muted);
+  line-height:1.6;
+  white-space:pre-line;
+}
+
+.modal-box .close{
+  position:absolute;
+  top:14px;
+  left:14px;
+  font-size:26px;
+  background:none;
+  border:none;
+  color:var(--muted);
+  cursor:pointer;
+}
+
+@keyframes fadeScale{
+  from{opacity:0;transform:scale(.95)}
+  to{opacity:1}
 }
 
 /* ================= FOOTER ================= */
