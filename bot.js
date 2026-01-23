@@ -87,12 +87,13 @@ const commands = [
     .setName("listvideos")
     .setDescription("List all videos (hidden)"),
 
+  /* 🔹 CHANGE HERE: banner FILE upload instead of URL */
   new SlashCommandBuilder()
     .setName("addbanner")
     .setDescription("Add banner to website (max 5)")
-    .addStringOption(o =>
+    .addAttachmentOption(o =>
       o.setName("image")
-        .setDescription("Banner image URL")
+        .setDescription("Banner image file")
         .setRequired(true)
     )
 ].map(c => c.toJSON());
@@ -152,7 +153,7 @@ client.on("interactionCreate", async interaction => {
       developer: "MrMoundo",
       description2: "",
       links,
-      messageId: null // 🔹 NEW
+      messageId: null
     };
 
     videos.push(video);
@@ -181,7 +182,6 @@ client.on("interactionCreate", async interaction => {
         }
       });
 
-      // 🔹 NEW: حفظ messageId
       video.messageId = msg.id;
       await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
     }
@@ -192,7 +192,7 @@ client.on("interactionCreate", async interaction => {
     });
   }
 
-  /* ===== EDIT VIDEO ===== */
+  /* ===== EDIT VIDEO (SYNC WITH DISCORD) ===== */
   if (interaction.commandName === "editvideo") {
     const videos = await fs.readJson(DATA_FILE);
     const title = interaction.options.getString("title");
@@ -216,7 +216,7 @@ client.on("interactionCreate", async interaction => {
 
     await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
 
-    // 🔹 NEW: تعديل رسالة الديسكورد
+    /* 🔹 UPDATE DISCORD MESSAGE */
     if (video.messageId) {
       const channel = await client.channels.fetch(CHANNEL_ID);
       const msg = await channel.messages.fetch(video.messageId).catch(() => null);
@@ -238,7 +238,6 @@ client.on("interactionCreate", async interaction => {
       return interaction.reply({ content: "Video not found.", ephemeral: true });
     }
 
-    // 🔹 NEW: مسح الرسالة من الشانل
     if (video.messageId) {
       const channel = await client.channels.fetch(CHANNEL_ID);
       const msg = await channel.messages.fetch(video.messageId).catch(() => null);
@@ -264,15 +263,26 @@ client.on("interactionCreate", async interaction => {
     return interaction.reply({ content: list, ephemeral: true });
   }
 
-  /* ===== ADD BANNER ===== */
+  /* ===== ADD BANNER (FILE UPLOAD) ===== */
   if (interaction.commandName === "addbanner") {
     const banners = await fs.readJson(BANNERS_FILE);
-    banners.push({ url: interaction.options.getString("image"), time: Date.now() });
+
+    const image = interaction.options.getAttachment("image");
+
+    banners.push({
+      url: image.url,      // Discord CDN
+      name: image.name,
+      time: Date.now()
+    });
+
     if (banners.length > 5) banners.shift();
 
     await fs.writeJson(BANNERS_FILE, banners, { spaces: 2 });
 
-    return interaction.reply({ content: "Banner added successfully.", ephemeral: true });
+    return interaction.reply({
+      content: "Banner uploaded successfully.",
+      ephemeral: true
+    });
   }
 });
 
