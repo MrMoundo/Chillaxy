@@ -18,12 +18,9 @@
   <div class="brand">CHILLAXY</div>
   <input placeholder="Search videos...">
 
-  <a href="/auth/login" class="login-btn" id="loginBtn">Login</a>
-
-  <div id="userBox" class="hidden">
-    <span id="username"></span>
-    <button id="dashBtn" class="hidden">Dashboard</button>
-    <a href="/auth/logout" class="logout">Logout</a>
+  <!-- AUTH AREA -->
+  <div id="authArea">
+    <a href="/auth/login" class="login-btn">Login</a>
   </div>
 </div>
 
@@ -41,11 +38,22 @@
   <div class="no-results hidden">No results</div>
 </section>
 
-<div class="modal hidden">
+<!-- VIDEO MODAL -->
+<div class="modal hidden" id="videoModal">
   <div class="modal-box">
-    <button class="close">×</button>
+    <button class="close" onclick="closeModal()">×</button>
     <h2></h2>
     <p></p>
+  </div>
+</div>
+
+<!-- DASHBOARD MODAL -->
+<div class="modal hidden" id="dashboard">
+  <div class="modal-box dashboard-box">
+    <button class="close" onclick="toggleDash()">×</button>
+    <h2>Dashboard</h2>
+    <input id="dashSearch" placeholder="Search videos...">
+    <div id="dashVideos"></div>
   </div>
 </div>
 
