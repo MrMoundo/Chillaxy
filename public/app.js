@@ -6,7 +6,6 @@ const noResults = document.querySelector(".no-results");
 const intro = document.getElementById("intro");
 const authArea = document.getElementById("authArea");
 
-/* dashboard elements (ممكن تكون مش موجودة) */
 const dashboard = document.getElementById("dashboard");
 const dashVideos = document.getElementById("dashVideos");
 const dashSearch = document.getElementById("dashSearch");
@@ -33,11 +32,7 @@ fetch("/auth/me")
 
     authArea.innerHTML = `
       <span class="user-name">👋 ${user.username}</span>
-      ${
-        IS_ADMIN
-          ? `<button class="login-btn" id="dashBtn">Dashboard</button>`
-          : ``
-      }
+      ${IS_ADMIN ? `<button class="login-btn" id="dashBtn">Dashboard</button>` : ``}
       <a href="/auth/logout" class="login-btn">Logout</a>
     `;
 
@@ -55,8 +50,7 @@ const heroTrack = document.querySelector(".hero-track");
 fetch(API + "/banners")
   .then(r => r.json())
   .then(banners => {
-    if (!banners || !banners.length) return;
-
+    if (!banners?.length) return;
     banners.forEach(b => {
       const img = document.createElement("img");
       img.src = b.url;
@@ -69,42 +63,44 @@ fetch(API + "/banners")
     }, 5000);
   });
 
+/* ===== YOUTUBE THUMB ===== */
+function getYoutubeThumb(url){
+  try{
+    const id = url.split("v=")[1]?.split("&")[0];
+    return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+  }catch{
+    return "";
+  }
+}
+
 /* ===== VIDEOS ===== */
 fetch(API + "/videos")
   .then(r => r.json())
   .then(videos => {
     ALL_VIDEOS = videos || [];
     renderVideos(ALL_VIDEOS);
-
-    if (IS_ADMIN && dashboard) {
-      renderDash(ALL_VIDEOS);
-    }
+    if (IS_ADMIN && dashboard) renderDash(ALL_VIDEOS);
   });
 
-function renderVideos(list) {
+function renderVideos(list){
   videosGrid.innerHTML = "";
 
-  if (!list.length) {
+  if(!list.length){
     noResults.classList.remove("hidden");
     return;
   }
-
   noResults.classList.add("hidden");
 
-  list.forEach(v => {
+  list.forEach(v=>{
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "video-card";
     card.innerHTML = `
-      <h3>${v.name}</h3>
-      <p>${v.description || ""}</p>
-      <a href="#" data-code="${v.code}">View Details</a>
+      <img src="${getYoutubeThumb(v.videoLink)}">
+      <div class="overlay">
+        <h3>${v.name}</h3>
+      </div>
     `;
-
-    card.querySelector("a").onclick = e => {
-      e.preventDefault();
-      openVideo(v);
-    };
-
+    card.onclick = ()=>openVideo(v);
     videosGrid.appendChild(card);
   });
 }
@@ -120,11 +116,9 @@ searchInput.oninput = e => {
   );
 };
 
-/* ===== VIDEO MODAL ===== */
-function openVideo(v) {
+/* ===== MODAL ===== */
+function openVideo(v){
   const modal = document.getElementById("videoModal");
-  if (!modal) return;
-
   modal.querySelector("h2").innerText = v.name;
   modal.querySelector("p").innerHTML = `
     ${v.description || ""}
@@ -133,14 +127,12 @@ function openVideo(v) {
   `;
   modal.classList.remove("hidden");
 }
-
-function closeModal() {
-  const modal = document.getElementById("videoModal");
-  if (modal) modal.classList.add("hidden");
+function closeModal(){
+  document.getElementById("videoModal").classList.add("hidden");
 }
 
-/* ===== JOIN STATUS ===== */
-function showJoinStatus() {
+/* ===== JOIN ===== */
+function showJoinStatus(){
   const join = document.createElement("div");
   join.className = "join";
   join.innerHTML = `
@@ -151,70 +143,57 @@ function showJoinStatus() {
     </div>
   `;
   document.body.appendChild(join);
-  setTimeout(() => join.remove(), 5 * 60 * 1000);
+  setTimeout(()=>join.remove(),300000);
 }
 
-/* ===== DASHBOARD (ADMIN ONLY) ===== */
-function toggleDash() {
-  if (!IS_ADMIN || !dashboard) return;
+/* ===== DASHBOARD ===== */
+function toggleDash(){
+  if(!IS_ADMIN) return;
   dashboard.classList.toggle("hidden");
 }
 
-function renderDash(list) {
-  if (!dashVideos) return;
-
-  dashVideos.innerHTML = "";
-
-  list.forEach(v => {
-    const d = document.createElement("div");
-    d.className = "card";
-    d.innerHTML = `
-      <h3 contenteditable
-        onblur="editVideo('${v.code}','name',this.innerText)">
-        ${v.name}
-      </h3>
-      <p contenteditable
-        onblur="editVideo('${v.code}','description',this.innerText)">
-        ${v.description || ""}
-      </p>
-      <button class="delete" onclick="deleteVideo('${v.code}')">
-        Delete
-      </button>
+function renderDash(list){
+  dashVideos.innerHTML="";
+  list.forEach(v=>{
+    const d=document.createElement("div");
+    d.className="card";
+    d.innerHTML=`
+      <strong>${v.name}</strong>
+      <small>ID: ${v.code}</small>
+      <textarea onblur="editVideo('${v.code}','description',this.value)">${v.description||""}</textarea>
+      <div class="dash-actions">
+        <button onclick="deleteVideo('${v.code}')">Delete</button>
+      </div>
     `;
     dashVideos.appendChild(d);
   });
 }
 
-if (dashSearch) {
-  dashSearch.oninput = e => {
-    const q = e.target.value.toLowerCase();
-    renderDash(
-      ALL_VIDEOS.filter(v => v.name.toLowerCase().includes(q))
-    );
+if(dashSearch){
+  dashSearch.oninput=e=>{
+    const q=e.target.value.toLowerCase();
+    renderDash(ALL_VIDEOS.filter(v=>v.name.toLowerCase().includes(q)));
   };
 }
 
-function editVideo(code, field, value) {
-  if (!IS_ADMIN) return;
-
-  fetch(API + "/videos/" + code, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ [field]: value })
+function editVideo(code,field,value){
+  if(!IS_ADMIN) return;
+  fetch(API+"/videos/"+code,{
+    method:"PUT",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({[field]:value})
   });
 }
 
-function deleteVideo(code) {
-  if (!IS_ADMIN) return;
-
-  fetch(API + "/videos/" + code, { method: "DELETE" }).then(() => {
-    ALL_VIDEOS = ALL_VIDEOS.filter(v => v.code !== code);
+function deleteVideo(code){
+  if(!IS_ADMIN) return;
+  fetch(API+"/videos/"+code,{method:"DELETE"}).then(()=>{
+    ALL_VIDEOS=ALL_VIDEOS.filter(v=>v.code!==code);
     renderVideos(ALL_VIDEOS);
     renderDash(ALL_VIDEOS);
   });
 }
 
-/* ===== BRAND ===== */
-document.querySelector(".brand").onclick = () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
+document.querySelector(".brand").onclick=()=>{
+  window.scrollTo({top:0,behavior:"smooth"});
 };
