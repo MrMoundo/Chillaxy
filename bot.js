@@ -151,7 +151,8 @@ client.on("interactionCreate", async interaction => {
       description,
       developer: "MrMoundo",
       description2: "",
-      links
+      links,
+      messageId: null // 🔹 NEW
     };
 
     videos.push(video);
@@ -172,13 +173,17 @@ client.on("interactionCreate", async interaction => {
     const channel = await client.channels.fetch(CHANNEL_ID);
 
     if (channel) {
-      await channel.send({
+      const msg = await channel.send({
         content: `${mentionText ? mentionText + "\n" : ""}**${title}**\n${description}\n${youtube}`,
         components: rows,
         allowedMentions: {
           parse: mentionText === "@everyone" ? ["everyone"] : ["roles"]
         }
       });
+
+      // 🔹 NEW: حفظ messageId
+      video.messageId = msg.id;
+      await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
     }
 
     return interaction.reply({
@@ -211,6 +216,15 @@ client.on("interactionCreate", async interaction => {
 
     await fs.writeJson(DATA_FILE, videos, { spaces: 2 });
 
+    // 🔹 NEW: تعديل رسالة الديسكورد
+    if (video.messageId) {
+      const channel = await client.channels.fetch(CHANNEL_ID);
+      const msg = await channel.messages.fetch(video.messageId).catch(() => null);
+      if (msg) {
+        await msg.edit(`**${video.name}**\n${video.description}\n${video.videoLink}`);
+      }
+    }
+
     return interaction.reply({ content: "Video updated.", ephemeral: true });
   }
 
@@ -218,13 +232,25 @@ client.on("interactionCreate", async interaction => {
   if (interaction.commandName === "deletevideo") {
     const videos = await fs.readJson(DATA_FILE);
     const title = interaction.options.getString("title");
+    const video = videos.find(v => v.name === title);
 
-    const filtered = videos.filter(v => v.name !== title);
-    if (filtered.length === videos.length) {
+    if (!video) {
       return interaction.reply({ content: "Video not found.", ephemeral: true });
     }
 
-    await fs.writeJson(DATA_FILE, filtered, { spaces: 2 });
+    // 🔹 NEW: مسح الرسالة من الشانل
+    if (video.messageId) {
+      const channel = await client.channels.fetch(CHANNEL_ID);
+      const msg = await channel.messages.fetch(video.messageId).catch(() => null);
+      if (msg) await msg.delete();
+    }
+
+    await fs.writeJson(
+      DATA_FILE,
+      videos.filter(v => v.name !== title),
+      { spaces: 2 }
+    );
+
     return interaction.reply({ content: "Video deleted.", ephemeral: true });
   }
 
