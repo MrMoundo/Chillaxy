@@ -330,3 +330,45 @@ body{
   .hero-track img{height:300px}
   .hero-overlay h1{font-size:28px}
 }
+
+/* ================================================================= */
+/* ======================= ADDITIONS ONLY =========================== */
+/* ================================================================= */
+
+/* ---- OPTIONAL: فيديوهات بشكل عادي (مش بنر) لو حبيت ---- */
+/* تضيف class="video-card normal" من غير ما تكسر القديم */
+
+.video-card.normal{
+  height:auto;
+  background:var(--card);
+}
+
+.video-card.normal img{
+  aspect-ratio:16/9;
+}
+
+/* ---- تحسين بسيط للبنر (من غير تغيير الأساسي) ---- */
+
+.hero-track img{
+  transition:transform 6s ease, filter .4s ease;
+}
+
+.hero-track img:hover{
+  transform:scale(1.05);
+  filter:brightness(.65) contrast(1.1);
+}
+
+/* ---- Dashboard تفاصيل أكتر (اختياري) ---- */
+
+.dashboard-box .card{
+  background:#0f0f12;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+}
+
+.dashboard-box small{
+  color:var(--muted);
+  font-size:12px;
+}
