@@ -4,6 +4,7 @@ import fs from "fs-extra";
 const router = express.Router();
 const ADMINS_FILE = "./data/admins.json";
 
+/* ===== LOGIN ===== */
 router.get("/login", (req, res) => {
   const params = new URLSearchParams({
     client_id: process.env.CLIENT_ID,
@@ -14,6 +15,7 @@ router.get("/login", (req, res) => {
   res.redirect(`https://discord.com/oauth2/authorize?${params}`);
 });
 
+/* ===== CALLBACK ===== */
 router.get("/callback", async (req, res) => {
   const code = req.query.code;
 
@@ -49,11 +51,13 @@ router.get("/callback", async (req, res) => {
   res.redirect("/");
 });
 
+/* ===== CURRENT USER ===== */
 router.get("/me", (req, res) => {
-  if (!req.session.user) return res.json(null);
+  if (!req.session.user) return res.status(401).json(null);
   res.json(req.session.user);
 });
 
+/* ===== LOGOUT ===== */
 router.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
