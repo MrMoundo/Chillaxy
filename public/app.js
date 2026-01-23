@@ -197,3 +197,68 @@ function deleteVideo(code){
 document.querySelector(".brand").onclick=()=>{
   window.scrollTo({top:0,behavior:"smooth"});
 };
+
+/* ================================================================= */
+/* ===================== ADDITIONS ONLY BELOW ======================= */
+/* ================================================================= */
+
+/*
+  ✨ تحسين عرض الفيديوهات:
+  - مش بنر
+  - صورة مظبوطة 16:9
+  - عنوان + وصف
+*/
+const _renderVideosOriginal = renderVideos;
+renderVideos = function(list){
+  videosGrid.innerHTML = "";
+
+  if(!list.length){
+    noResults.classList.remove("hidden");
+    return;
+  }
+  noResults.classList.add("hidden");
+
+  list.forEach(v=>{
+    const card = document.createElement("div");
+    card.className = "video-card normal";
+    card.innerHTML = `
+      <div class="video-thumb">
+        <img src="${getYoutubeThumb(v.videoLink)}">
+      </div>
+      <div class="video-info">
+        <h3>${v.name}</h3>
+        <p>${v.description || ""}</p>
+      </div>
+    `;
+    card.onclick = ()=>openVideo(v);
+    videosGrid.appendChild(card);
+  });
+};
+
+/*
+  ✨ Dashboard أغنى:
+  - Thumbnail
+  - معلومات أكتر
+*/
+const _renderDashOriginal = renderDash;
+renderDash = function(list){
+  dashVideos.innerHTML="";
+  list.forEach(v=>{
+    const d=document.createElement("div");
+    d.className="card";
+    d.innerHTML=`
+      <div class="dashboard-video">
+        <img src="${getYoutubeThumb(v.videoLink)}">
+        <div class="dashboard-info">
+          <strong>${v.name}</strong>
+          <small>ID: ${v.code}</small>
+          <textarea onblur="editVideo('${v.code}','description',this.value)">${v.description||""}</textarea>
+          <div class="dash-actions">
+            <button onclick="deleteVideo('${v.code}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+    dashVideos.appendChild(d);
+  });
+};
