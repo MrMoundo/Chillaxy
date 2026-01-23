@@ -335,40 +335,36 @@ body{
 /* ======================= ADDITIONS ONLY =========================== */
 /* ================================================================= */
 
-/* ---- OPTIONAL: فيديوهات بشكل عادي (مش بنر) لو حبيت ---- */
-/* تضيف class="video-card normal" من غير ما تكسر القديم */
+/* 🔥 FIX 1: الكروت تبقى صغيرة وجنب بعض (زي الألعاب) */
+.videos-grid{
+  grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+}
 
-.video-card.normal{
+/* 🔥 FIX 2: منع الكارت يبقى طويل أو بانر */
+.video-card{
   height:auto;
-  background:var(--card);
+  aspect-ratio:3/4; /* نفس كروت الألعاب */
 }
 
-.video-card.normal img{
-  aspect-ratio:16/9;
+/* 🔥 FIX 3: العنوان ما يغطيش الصورة */
+.video-card .overlay{
+  padding:12px;
 }
 
-/* ---- تحسين بسيط للبنر (من غير تغيير الأساسي) ---- */
-
-.hero-track img{
-  transition:transform 6s ease, filter .4s ease;
+/* 🔥 FIX 4: Dashboard يبقى Grid مش عمود */
+#dashVideos{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:16px;
 }
 
-.hero-track img:hover{
-  transform:scale(1.05);
-  filter:brightness(.65) contrast(1.1);
+#dashVideos .card{
+  margin-bottom:0;
 }
 
-/* ---- Dashboard تفاصيل أكتر (اختياري) ---- */
-
-.dashboard-box .card{
-  background:#0f0f12;
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:16px;
-}
-
-.dashboard-box small{
-  color:var(--muted);
-  font-size:12px;
+/* 🔥 FIX 5: موبايل أصغر */
+@media(max-width:768px){
+  .videos-grid{
+    grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  }
 }
