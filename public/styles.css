@@ -368,3 +368,112 @@ body{
     grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
   }
 }
+/* ========================================================= */
+/* =================== EXTRA FIXES (ADD ONLY) =============== */
+/* ========================================================= */
+
+/* ==== VIDEO GRID: جنب بعض وصغير ==== */
+.videos-grid{
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr)) !important;
+  align-items:start;
+}
+
+/* ==== VIDEO CARD: مش بانر ==== */
+.video-card{
+  height:auto !important;
+  aspect-ratio:16/9 !important;
+  display:flex;
+  flex-direction:column;
+  background:var(--card) !important;
+  overflow:hidden;
+}
+
+/* ==== الصورة لوحدها من غير سواد ==== */
+.video-card img{
+  width:100%;
+  aspect-ratio:16/9;
+  object-fit:cover;
+  border-radius:16px 16px 0 0;
+}
+
+/* ==== إلغاء أي overlay أسود ==== */
+.video-card .overlay{
+  display:none !important;
+}
+
+/* ==== معلومات الفيديو + زر WATCH ==== */
+.video-card .info{
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.video-card h3{
+  font-size:14px;
+  line-height:1.4;
+  margin:0;
+}
+
+/* ==== زر WATCH ==== */
+.video-card .watch-btn{
+  margin-top:auto;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  padding:8px;
+  font-size:13px;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.video-card .watch-btn:hover{
+  background:var(--neon);
+  color:#000;
+  box-shadow:0 0 12px var(--neon);
+}
+
+/* ==== MODAL أكبر وفخم ==== */
+.modal-box{
+  max-width:900px !important;
+}
+
+.modal-video{
+  width:100%;
+  aspect-ratio:16/9;
+  margin-bottom:20px;
+}
+
+.modal-video iframe{
+  width:100%;
+  height:100%;
+  border:none;
+  border-radius:16px;
+}
+
+/* ==== DASHBOARD GRID ==== */
+#dashVideos{
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:20px;
+}
+
+#dashVideos .card{
+  margin-bottom:0 !important;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+/* ==== موبايل ==== */
+@media(max-width:768px){
+  .videos-grid{
+    grid-template-columns:repeat(auto-fill,minmax(140px,1fr)) !important;
+  }
+
+  .modal-box{
+    max-width:95% !important;
+  }
+}
+
