@@ -1,5 +1,7 @@
 const API = "https://chillaxy.up.railway.app/api";
 
+/* ================= ELEMENTS ================= */
+
 const videosGrid = document.querySelector(".videos-grid");
 const searchInput = document.querySelector(".topbar input");
 const noResults = document.querySelector(".no-results");
@@ -10,18 +12,22 @@ const dashboard = document.getElementById("dashboard");
 const dashVideos = document.getElementById("dashVideos");
 const dashSearch = document.getElementById("dashSearch");
 
+/* ================= STATE ================= */
+
 let ALL_VIDEOS = [];
 let CURRENT_USER = null;
 let IS_ADMIN = false;
 
-/* ===== INTRO ===== */
+/* ================= INTRO ================= */
+
 window.onload = () => {
   setTimeout(() => {
     if (intro) intro.style.display = "none";
   }, 2800);
 };
 
-/* ===== AUTH ===== */
+/* ================= AUTH ================= */
+
 fetch("/auth/me")
   .then(r => (r.status === 401 ? null : r.json()))
   .then(user => {
@@ -43,37 +49,43 @@ fetch("/auth/me")
     showJoinStatus();
   });
 
-/* ===== HERO ===== */
-let heroIndex = 0;
+/* ================= HERO (ONE BANNER) ================= */
+
 const heroTrack = document.querySelector(".hero-track");
+let heroIndex = 0;
 
 fetch(API + "/banners")
   .then(r => r.json())
   .then(banners => {
-    if (!banners?.length) return;
-    banners.forEach(b => {
-      const img = document.createElement("img");
-      img.src = b.url;
-      heroTrack.appendChild(img);
-    });
+    if (!banners || !banners.length) return;
+
+    const img = document.createElement("img");
+    img.src = banners[0].url;
+    heroTrack.appendChild(img);
 
     setInterval(() => {
       heroIndex = (heroIndex + 1) % banners.length;
-      heroTrack.style.transform = `translateX(-${heroIndex * 100}vw)`;
+      img.src = banners[heroIndex].url;
     }, 5000);
   });
 
-/* ===== YOUTUBE THUMB ===== */
-function getYoutubeThumb(url){
+/* ================= HELPERS ================= */
+
+function getYoutubeId(url){
   try{
-    const id = url.split("v=")[1]?.split("&")[0];
-    return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    return url.split("v=")[1].split("&")[0];
   }catch{
-    return "";
+    return null;
   }
 }
 
-/* ===== VIDEOS ===== */
+function getYoutubeThumb(url){
+  const id = getYoutubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "";
+}
+
+/* ================= VIDEOS ================= */
+
 fetch(API + "/videos")
   .then(r => r.json())
   .then(videos => {
@@ -85,27 +97,35 @@ fetch(API + "/videos")
 function renderVideos(list){
   videosGrid.innerHTML = "";
 
-  if(!list.length){
+  if (!list.length){
     noResults.classList.remove("hidden");
     return;
   }
   noResults.classList.add("hidden");
 
-  list.forEach(v=>{
+  list.forEach(v => {
     const card = document.createElement("div");
-    card.className = "video-card";
+    card.className = "video-card normal";
+
     card.innerHTML = `
       <img src="${getYoutubeThumb(v.videoLink)}">
-      <div class="overlay">
+      <div class="info">
         <h3>${v.name}</h3>
+        <button class="watch-btn">WATCH</button>
       </div>
     `;
-    card.onclick = ()=>openVideo(v);
+
+    card.querySelector(".watch-btn").onclick = e => {
+      e.stopPropagation();
+      openVideo(v);
+    };
+
     videosGrid.appendChild(card);
   });
 }
 
-/* ===== SEARCH ===== */
+/* ================= SEARCH ================= */
+
 searchInput.oninput = e => {
   const q = e.target.value.toLowerCase();
   renderVideos(
@@ -116,22 +136,32 @@ searchInput.oninput = e => {
   );
 };
 
-/* ===== MODAL ===== */
+/* ================= MODAL ================= */
+
 function openVideo(v){
   const modal = document.getElementById("videoModal");
+  const id = getYoutubeId(v.videoLink);
+
   modal.querySelector("h2").innerText = v.name;
   modal.querySelector("p").innerHTML = `
-    ${v.description || ""}
-    <br><br>
-    <a href="${v.videoLink}" target="_blank">Watch</a>
+    <div class="modal-video">
+      <iframe
+        src="https://www.youtube.com/embed/${id}"
+        allowfullscreen
+      ></iframe>
+    </div>
+    <p>${v.description || ""}</p>
   `;
+
   modal.classList.remove("hidden");
 }
+
 function closeModal(){
   document.getElementById("videoModal").classList.add("hidden");
 }
 
-/* ===== JOIN ===== */
+/* ================= JOIN ================= */
+
 function showJoinStatus(){
   const join = document.createElement("div");
   join.className = "join";
@@ -146,21 +176,25 @@ function showJoinStatus(){
   setTimeout(()=>join.remove(),300000);
 }
 
-/* ===== DASHBOARD ===== */
+/* ================= DASHBOARD ================= */
+
 function toggleDash(){
   if(!IS_ADMIN) return;
   dashboard.classList.toggle("hidden");
 }
 
 function renderDash(list){
-  dashVideos.innerHTML="";
-  list.forEach(v=>{
-    const d=document.createElement("div");
-    d.className="card";
-    d.innerHTML=`
+  dashVideos.innerHTML = "";
+
+  list.forEach(v => {
+    const d = document.createElement("div");
+    d.className = "card";
+    d.innerHTML = `
       <strong>${v.name}</strong>
       <small>ID: ${v.code}</small>
-      <textarea onblur="editVideo('${v.code}','description',this.value)">${v.description||""}</textarea>
+      <textarea onblur="editVideo('${v.code}','description',this.value)">
+        ${v.description || ""}
+      </textarea>
       <div class="dash-actions">
         <button onclick="deleteVideo('${v.code}')">Delete</button>
       </div>
@@ -169,96 +203,34 @@ function renderDash(list){
   });
 }
 
-if(dashSearch){
-  dashSearch.oninput=e=>{
-    const q=e.target.value.toLowerCase();
-    renderDash(ALL_VIDEOS.filter(v=>v.name.toLowerCase().includes(q)));
+if (dashSearch){
+  dashSearch.oninput = e => {
+    const q = e.target.value.toLowerCase();
+    renderDash(ALL_VIDEOS.filter(v => v.name.toLowerCase().includes(q)));
   };
 }
 
-function editVideo(code,field,value){
+function editVideo(code, field, value){
   if(!IS_ADMIN) return;
-  fetch(API+"/videos/"+code,{
-    method:"PUT",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({[field]:value})
+  fetch(API + "/videos/" + code, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ [field]: value })
   });
 }
 
 function deleteVideo(code){
   if(!IS_ADMIN) return;
-  fetch(API+"/videos/"+code,{method:"DELETE"}).then(()=>{
-    ALL_VIDEOS=ALL_VIDEOS.filter(v=>v.code!==code);
-    renderVideos(ALL_VIDEOS);
-    renderDash(ALL_VIDEOS);
-  });
+  fetch(API + "/videos/" + code, { method: "DELETE" })
+    .then(() => {
+      ALL_VIDEOS = ALL_VIDEOS.filter(v => v.code !== code);
+      renderVideos(ALL_VIDEOS);
+      renderDash(ALL_VIDEOS);
+    });
 }
 
-document.querySelector(".brand").onclick=()=>{
-  window.scrollTo({top:0,behavior:"smooth"});
-};
+/* ================= BRAND ================= */
 
-/* ================================================================= */
-/* ===================== ADDITIONS ONLY BELOW ======================= */
-/* ================================================================= */
-
-/*
-  ✨ تحسين عرض الفيديوهات:
-  - مش بنر
-  - صورة مظبوطة 16:9
-  - عنوان + وصف
-*/
-const _renderVideosOriginal = renderVideos;
-renderVideos = function(list){
-  videosGrid.innerHTML = "";
-
-  if(!list.length){
-    noResults.classList.remove("hidden");
-    return;
-  }
-  noResults.classList.add("hidden");
-
-  list.forEach(v=>{
-    const card = document.createElement("div");
-    card.className = "video-card normal";
-    card.innerHTML = `
-      <div class="video-thumb">
-        <img src="${getYoutubeThumb(v.videoLink)}">
-      </div>
-      <div class="video-info">
-        <h3>${v.name}</h3>
-        <p>${v.description || ""}</p>
-      </div>
-    `;
-    card.onclick = ()=>openVideo(v);
-    videosGrid.appendChild(card);
-  });
-};
-
-/*
-  ✨ Dashboard أغنى:
-  - Thumbnail
-  - معلومات أكتر
-*/
-const _renderDashOriginal = renderDash;
-renderDash = function(list){
-  dashVideos.innerHTML="";
-  list.forEach(v=>{
-    const d=document.createElement("div");
-    d.className="card";
-    d.innerHTML=`
-      <div class="dashboard-video">
-        <img src="${getYoutubeThumb(v.videoLink)}">
-        <div class="dashboard-info">
-          <strong>${v.name}</strong>
-          <small>ID: ${v.code}</small>
-          <textarea onblur="editVideo('${v.code}','description',this.value)">${v.description||""}</textarea>
-          <div class="dash-actions">
-            <button onclick="deleteVideo('${v.code}')">Delete</button>
-          </div>
-        </div>
-      </div>
-    `;
-    dashVideos.appendChild(d);
-  });
+document.querySelector(".brand").onclick = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
