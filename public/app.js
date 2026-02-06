@@ -11,6 +11,8 @@ const authArea = document.getElementById("authArea");
 const dashboard = document.getElementById("dashboard");
 const dashVideos = document.getElementById("dashVideos");
 const dashSearch = document.getElementById("dashSearch");
+const infoGrid = document.getElementById("infoGrid");
+const infoModal = document.getElementById("infoModal");
 const statTotal = document.getElementById("statTotal");
 const statFiltered = document.getElementById("statFiltered");
 const statSync = document.getElementById("statSync");
@@ -150,10 +152,10 @@ function renderVideos(list){
   videosGrid.innerHTML = "";
 
   if (!list.length){
-    noResults.classList.remove("hidden");
+    if (noResults) noResults.classList.remove("hidden");
     return;
   }
-  noResults.classList.add("hidden");
+  if (noResults) noResults.classList.add("hidden");
 
   list.forEach(v => {
     const card = document.createElement("div");
@@ -178,19 +180,25 @@ function renderVideos(list){
 
 /* ================= SEARCH ================= */
 
-searchInput.oninput = e => {
-  const q = e.target.value.toLowerCase();
-  localStorage.setItem(CACHE_SEARCH_KEY, q);
-  renderVideos(
-    ALL_VIDEOS.filter(v =>
-      v.name.toLowerCase().includes(q) ||
-      (v.description || "").toLowerCase().includes(q)
-    )
-  );
-};
+function normalizeText(value){
+  return (value || "").toString().toLowerCase().trim();
+}
+
+if (searchInput){
+  searchInput.oninput = e => {
+    const q = normalizeText(e.target.value);
+    localStorage.setItem(CACHE_SEARCH_KEY, q);
+    renderVideos(
+      ALL_VIDEOS.filter(v =>
+        normalizeText(v.name).includes(q) ||
+        normalizeText(v.description).includes(q)
+      )
+    );
+  };
+}
 
 const savedSearch = localStorage.getItem(CACHE_SEARCH_KEY);
-if (savedSearch){
+if (savedSearch && searchInput){
   searchInput.value = savedSearch;
   searchInput.dispatchEvent(new Event("input"));
 }
@@ -219,6 +227,10 @@ function openVideo(v){
 
 function closeModal(){
   document.getElementById("videoModal").classList.add("hidden");
+}
+
+function closeInfoModal(){
+  if (infoModal) infoModal.classList.add("hidden");
 }
 
 /* ================= JOIN ================= */
@@ -294,9 +306,9 @@ function renderDash(list){
 
 if (dashSearch){
   dashSearch.oninput = e => {
-    const q = e.target.value.toLowerCase();
+    const q = normalizeText(e.target.value);
     localStorage.setItem(CACHE_DASH_SEARCH_KEY, q);
-    renderDash(ALL_VIDEOS.filter(v => v.name.toLowerCase().includes(q)));
+    renderDash(ALL_VIDEOS.filter(v => normalizeText(v.name).includes(q)));
   };
 }
 
@@ -307,9 +319,93 @@ if (dashSearch && savedDashSearch){
 
 function applyDashFilter(){
   if (!dashSearch) return;
-  const q = dashSearch.value.toLowerCase();
-  renderDash(ALL_VIDEOS.filter(v => v.name.toLowerCase().includes(q)));
+  const q = normalizeText(dashSearch.value);
+  renderDash(ALL_VIDEOS.filter(v => normalizeText(v.name).includes(q)));
 }
+
+const infoData = {
+  about: [
+    {
+      name: "About Us",
+      link: "#about-us",
+      description:
+        "مرحبًا بك في سيرفر شلاكسي! نحن مجتمع يجمع بين عشاق الدردشة والتفاعل، نوفر بيئة ممتعة وآمنة للجميع. يهدف السيرفر إلى تقديم تجربة رائعة لكل الأعضاء، مع الالتزام بالقوانين لحماية الجميع."
+    },
+    {
+      name: "FAQ",
+      link: "#faq",
+      description:
+        "1. ما هو سيرفر Chillaxy Community؟ سيرفر مجتمع يجمع محبي التفاعل والتواصل في بيئة آمنة وخالية من المشاكل.\n2. ما هي أدوات السيلف بوت؟ السيلف بوت (Self Bot) هي أدوات غير قانونية تستخدم لتشغيل سكربتات داخل ديسكورد بشكل غي مسموح به.\n3. لماذا يُمنع استخدام السيلف بوت؟ يخالف قوانين ديسكورد وقد يؤدي لحظر حسابك نهائيًا.\n4. كيف أحمي نفسي من أدوات السيلف بوت؟ لا تثق بأي أداة تعدك بميزات غير رسمية لديسكورد."
+    },
+    {
+      name: "Careers",
+      link: "#careers",
+      description:
+        "حاليًا، لا يوجد وظائف متاحة، لكننا دائمًا نبحث عن أشخاص موهوبين للمساعدة في تطوير المجتمع. إذا كنت مهتمًا بالمساهمة، تابع قنوات الإعلانات في السيرفر لمعرفة الفرص المتاحة قريبًا!"
+    }
+  ],
+  terms: [
+    {
+      name: "Privacy Shield",
+      link: "#privacy-shield",
+      description:
+        "نحن نأخذ خصوصية أعضائنا على محمل الجد. لا نقوم بجمع أو مشاركة بياناتك مع أي طرف ثالث، ونضمن حماية معلوماتك داخل السيرفر والموقع. لا تثق بأي شخص يطلب منك بياناتك الشخصية."
+    },
+    {
+      name: "Privacy Policy",
+      link: "#privacy-policy",
+      description:
+        "لا نطلب أي معلومات شخصية من الأعضاء. نحترم سرية بيانات المستخدمين ونمنع أي استخدام غير مصرح به. في حالة وجود أي نشاط مريب، يرجى التبليغ فورًا للإدارة داخل السيرفر."
+    },
+    {
+      name: "Terms of Service",
+      link: "#terms-of-service",
+      description:
+        "الأدوات المتاحة هنا للتجربة والتعلم فقط، ولا ننصح باستخدامها في حساباتك الأساسية. لا نتحمل مسؤولية أي حظر أو ضرر قد يحدث نتيجة لاستخدام السيلف بوت. إساءة استخدام الأدوات قد تؤدي إلى حظر حسابك من ديسكورد نهائيًا."
+    }
+  ],
+  socials: [
+    { name: "Discord", link: "https://discord.gg/TVPmfTdKQ9" },
+    { name: "Twitter", link: "https://twitter.com" },
+    { name: "YouTube", link: "https://www.youtube.com/@Mr-Moundo" },
+    { name: "Instagram", link: "https://instagram.com" },
+    { name: "Facebook", link: "https://facebook.com" }
+  ]
+};
+
+function renderInfoCards(){
+  if (!infoGrid) return;
+  const items = [
+    ...infoData.about.map(item => ({ ...item, group: "About" })),
+    ...infoData.terms.map(item => ({ ...item, group: "Terms" })),
+    ...infoData.socials.map(item => ({ ...item, group: "Social" }))
+  ];
+
+  infoGrid.innerHTML = "";
+  items.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "info-card";
+    card.innerHTML = `
+      <span>${item.group}</span>
+      <strong>${item.name}</strong>
+      <p>${item.description || "Open link"}</p>
+    `;
+    card.onclick = () => openInfoModal(item);
+    infoGrid.appendChild(card);
+  });
+}
+
+function openInfoModal(item){
+  if (!infoModal) return;
+  infoModal.querySelector("h2").innerText = item.name;
+  infoModal.querySelector("p").innerText = item.description || "Open link";
+  const link = infoModal.querySelector(".info-link");
+  link.href = item.link || "#";
+  link.innerText = item.link ? "Open link" : "No link";
+  infoModal.classList.remove("hidden");
+}
+
+renderInfoCards();
 
 function editVideo(code, field, value){
   if(!IS_ADMIN) return;
