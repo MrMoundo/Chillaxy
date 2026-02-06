@@ -6,10 +6,13 @@
   --text:#ffffff;
   --muted:#a1a1aa;
   --accent:#7c3aed;
+  --accent-2:#22d3ee;
+  --accent-3:#f97316;
 
   --neon:#00ff9c;
   --neon-soft:rgba(0,255,156,.25);
   --accent-soft:rgba(124,58,237,.25);
+  --glass:rgba(15,15,18,.65);
 }
 
 *{
@@ -20,7 +23,8 @@
 body{
   margin:0;
   background:
-    radial-gradient(1200px 600px at top, rgba(124,58,237,.08), transparent 60%),
+    radial-gradient(1200px 600px at top left, rgba(124,58,237,.18), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(34,211,238,.15), transparent 60%),
     var(--bg);
   color:var(--text);
   overflow-x:hidden;
@@ -79,9 +83,10 @@ body{
   align-items:center;
   gap:20px;
   padding:16px 30px;
-  background:rgba(20,20,22,.85);
+  background:var(--glass);
   backdrop-filter:blur(10px);
   border-bottom:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
 }
 
 .brand{
@@ -100,11 +105,18 @@ body{
 
 .topbar input{
   flex:1;
-  background:#0f0f12;
-  border:1px solid var(--border);
+  background:rgba(8,8,12,.85);
+  border:1px solid rgba(124,58,237,.35);
   padding:10px 14px;
   border-radius:10px;
   color:var(--text);
+  transition:.3s;
+}
+
+.topbar input:focus{
+  outline:none;
+  border-color:var(--accent-2);
+  box-shadow:0 0 0 3px rgba(34,211,238,.15);
 }
 
 .login-btn{
@@ -118,8 +130,9 @@ body{
 }
 
 .login-btn:hover{
-  background:var(--neon);
-  color:#000;
+  background:linear-gradient(120deg,var(--accent),var(--accent-2));
+  color:#0b0b0f;
+  box-shadow:0 0 20px rgba(124,58,237,.3);
 }
 
 /* ================= HERO ================= */
@@ -128,6 +141,14 @@ body{
   position:relative;
   height:420px;
   overflow:hidden;
+}
+
+.hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(600px 200px at 20% 20%, rgba(34,211,238,.2), transparent 70%);
+  pointer-events:none;
 }
 
 .hero-track{
@@ -141,8 +162,8 @@ body{
   width:100%;
   height:100%;
   object-fit:cover;
-  filter:brightness(.55);
-  animation:heroFade 5s ease-in-out infinite;
+  filter:brightness(.6) saturate(1.1);
+  animation:heroFade 6s ease-in-out infinite;
 }
 
 @keyframes heroFade{
@@ -162,10 +183,30 @@ body{
   background:linear-gradient(to right,var(--bg),transparent 70%);
 }
 
+.hero-overlay h1{
+  font-size:42px;
+  margin:0 0 12px;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  text-shadow:0 12px 30px rgba(0,0,0,.55);
+}
+
+.hero-overlay p{
+  color:var(--muted);
+  font-size:18px;
+  margin:0;
+}
+
 /* ================= VIDEOS ================= */
 
 .videos-section{
   padding:60px 40px;
+}
+
+.videos-section h2{
+  font-size:26px;
+  margin:0 0 24px;
+  letter-spacing:1px;
 }
 
 .videos-grid{
@@ -175,43 +216,54 @@ body{
 }
 
 .video-card{
-  background:var(--card);
+  background:linear-gradient(160deg, rgba(28,28,35,.9), rgba(14,14,18,.95));
+  border:1px solid rgba(124,58,237,.2);
   border-radius:16px;
   overflow:hidden;
   display:flex;
   flex-direction:column;
   transition:.3s;
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+  position:relative;
 }
 
 .video-card:hover{
   transform:translateY(-6px);
+  border-color:rgba(34,211,238,.45);
+  box-shadow:0 20px 40px rgba(0,0,0,.4);
 }
 
 .video-card img{
   width:100%;
   aspect-ratio:16/9;
   object-fit:cover;
+  transform:scale(1);
+  transition:.4s;
 }
 
 .video-card .overlay{
   display:none;
 }
 
+.video-card:hover img{
+  transform:scale(1.05);
+}
+
 .video-card .info{
-  padding:12px;
+  padding:16px;
   display:flex;
   flex-direction:column;
   gap:10px;
 }
 
 .video-card h3{
-  font-size:14px;
+  font-size:15px;
   margin:0;
 }
 
 .video-card .watch-btn{
   margin-top:auto;
-  background:var(--accent);
+  background:linear-gradient(120deg,var(--accent),var(--accent-2));
   border:none;
   border-radius:10px;
   padding:8px;
@@ -221,8 +273,8 @@ body{
 }
 
 .video-card .watch-btn:hover{
-  background:var(--neon);
-  color:#000;
+  background:linear-gradient(120deg,var(--accent-2),var(--neon));
+  color:#04110c;
 }
 
 /* ================= MODAL ================= */
@@ -245,6 +297,8 @@ body{
   max-width:900px;
   width:95%;
   padding:28px;
+  border:1px solid rgba(124,58,237,.25);
+  box-shadow:0 24px 60px rgba(0,0,0,.55);
 }
 
 .modal-video{
@@ -268,9 +322,75 @@ body{
   gap:20px;
 }
 
+.dashboard-box h2{
+  margin-top:0;
+  letter-spacing:1px;
+}
+
+#dashSearch{
+  width:100%;
+  background:rgba(8,8,12,.9);
+  border:1px solid rgba(124,58,237,.35);
+  color:var(--text);
+  padding:12px 14px;
+  border-radius:12px;
+  margin:12px 0 20px;
+}
+
+#dashSearch:focus{
+  outline:none;
+  border-color:var(--accent-2);
+  box-shadow:0 0 0 3px rgba(34,211,238,.2);
+}
+
+#dashVideos .card{
+  background:rgba(18,18,22,.95);
+  border:1px solid rgba(124,58,237,.2);
+  border-radius:16px;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#dashVideos textarea{
+  background:#0f0f12;
+  color:var(--text);
+  border:1px solid rgba(124,58,237,.2);
+  border-radius:12px;
+  min-height:100px;
+  padding:10px;
+  resize:vertical;
+}
+
+.dash-actions{
+  display:flex;
+  justify-content:flex-end;
+}
+
+.dash-actions button{
+  background:linear-gradient(120deg,var(--accent-3),var(--accent));
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.dash-actions button:hover{
+  filter:brightness(1.1);
+}
+
 /* ================= NO RESULTS ================= */
 
 .no-results{
+  margin-top:20px;
+  color:var(--muted);
+  font-size:15px;
+  text-align:center;
+}
+
+.hidden{
   display:none !important;
 }
 
@@ -278,7 +398,43 @@ body{
 
 @media(max-width:768px){
   .hero{height:300px}
+  .hero-overlay{padding:0 24px}
   .videos-grid{
     grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
   }
+}
+
+/* ================= JOIN STATUS ================= */
+
+.join{
+  position:fixed;
+  right:24px;
+  bottom:24px;
+  background:linear-gradient(120deg,rgba(20,20,24,.95),rgba(12,12,16,.95));
+  border:1px solid rgba(124,58,237,.4);
+  border-radius:16px;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  box-shadow:0 20px 50px rgba(0,0,0,.45);
+  animation:floatIn .6s ease;
+  z-index:20;
+}
+
+.join img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+
+.join a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:600;
+}
+
+@keyframes floatIn{
+  from{transform:translateY(20px);opacity:0}
+  to{transform:translateY(0);opacity:1}
 }
