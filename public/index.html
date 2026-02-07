@@ -38,6 +38,14 @@
   <div class="no-results hidden">No results</div>
 </section>
 
+<section class="info-section" id="community-info">
+  <div class="info-header">
+    <h2>Community Info</h2>
+    <p>كل التفاصيل المهمة عن Chillaxy في مكان واحد.</p>
+  </div>
+  <div class="info-grid" id="infoGrid"></div>
+</section>
+
 <!-- VIDEO MODAL -->
 <div class="modal hidden" id="videoModal">
   <div class="modal-box">
@@ -47,12 +55,47 @@
   </div>
 </div>
 
+<div class="modal hidden" id="infoModal">
+  <div class="modal-box info-modal">
+    <button class="close" onclick="closeInfoModal()">×</button>
+    <h2></h2>
+    <p></p>
+    <a class="info-link" href="#" target="_blank" rel="noopener">Open link</a>
+  </div>
+</div>
+
 <!-- DASHBOARD MODAL -->
 <div class="modal hidden" id="dashboard">
   <div class="modal-box dashboard-box">
     <button class="close" onclick="toggleDash()">×</button>
-    <h2>Dashboard</h2>
-    <input id="dashSearch" placeholder="Search videos...">
+    <div class="dashboard-header">
+      <div>
+        <h2>Dashboard</h2>
+        <p class="dashboard-subtitle">Manage videos, banners, and recent updates.</p>
+      </div>
+      <div class="dashboard-actions">
+        <button class="dash-btn" id="refreshDash">Refresh</button>
+        <button class="dash-btn outline" id="scrollTopDash">Scroll Top</button>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span>Total Videos</span>
+        <strong id="statTotal">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>Filtered</span>
+        <strong id="statFiltered">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>Last Sync</span>
+        <strong id="statSync">--</strong>
+      </div>
+    </div>
+    <div class="dashboard-search">
+      <input id="dashSearch" placeholder="Search videos...">
+      <span class="dash-hint">Tip: edit description, then click خارج الحقل للحفظ</span>
+    </div>
     <div id="dashVideos"></div>
   </div>
 </div>
