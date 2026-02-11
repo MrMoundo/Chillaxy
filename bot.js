@@ -6,7 +6,8 @@ import {
   Routes,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  EmbedBuilder
 } from "discord.js";
 import fs from "fs-extra";
 import dotenv from "dotenv";
@@ -17,12 +18,119 @@ const CHANNEL_ID = "1298667533485735969";
 const DATA_FILE = "./data/videos.json";
 const BANNERS_FILE = "./data/banners.json";
 
+const SERVER_CLONER_CODE = "7114wqeqwdas17431465467dqwekjhhaweqsdasewqe5343tr00sawqryzMoundo";
+const SERVER_CLONER_LOG_CHANNEL_ID = "1381563299228811264";
+const SERVER_CLONER_TRACKER_FILE = "./data/server_cloner_tracker.json";
+const SERVER_CLONER_BACKUP_FILE = "./data/server_cloner_code_backup.jsonl";
+
 const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
 const OWNER_ID = process.env.ADMIN_ID;
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
 });
+
+async function readTracker(){
+  const exists = await fs.pathExists(SERVER_CLONER_TRACKER_FILE);
+  if (!exists) {
+    return {
+      schemaVersion: 1,
+      trackedCodes: [SERVER_CLONER_CODE],
+      totalUsage: 0,
+      usageByUser: {},
+      events: []
+    };
+  }
+
+  const tracker = await fs.readJson(SERVER_CLONER_TRACKER_FILE);
+  return {
+    schemaVersion: 1,
+    trackedCodes: Array.isArray(tracker.trackedCodes)
+      ? [...new Set([...tracker.trackedCodes, SERVER_CLONER_CODE])]
+      : [SERVER_CLONER_CODE],
+    totalUsage: Number.isFinite(tracker.totalUsage) ? tracker.totalUsage : 0,
+    usageByUser: tracker.usageByUser && typeof tracker.usageByUser === "object"
+      ? tracker.usageByUser
+      : {},
+    events: Array.isArray(tracker.events) ? tracker.events : []
+  };
+}
+
+async function writeTracker(tracker){
+  await fs.writeJson(SERVER_CLONER_TRACKER_FILE, tracker, { spaces: 2 });
+}
+
+async function backupCodeEvent(event){
+  const backupLine = JSON.stringify(event) + "\n";
+  await fs.appendFile(SERVER_CLONER_BACKUP_FILE, backupLine, "utf8");
+}
+
+async function handleServerClonerCode(message){
+  if (!message?.guild || !message?.content) return;
+  if (message.author?.bot) return;
+  if (message.content.trim() !== SERVER_CLONER_CODE) return;
+
+  await message.delete().catch(() => null);
+
+  const tracker = await readTracker();
+
+  const userId = message.author.id;
+  const previousUserCount = Number.isFinite(tracker.usageByUser[userId])
+    ? tracker.usageByUser[userId]
+    : 0;
+
+  const userUsage = previousUserCount + 1;
+  const totalUsage = tracker.totalUsage + 1;
+
+  tracker.totalUsage = totalUsage;
+  tracker.usageByUser[userId] = userUsage;
+
+  const event = {
+    code: SERVER_CLONER_CODE,
+    userId,
+    username: message.author.tag,
+    guildId: message.guild.id,
+    channelId: message.channel.id,
+    messageId: message.id,
+    usedAt: new Date().toISOString(),
+    userUsage,
+    totalUsage
+  };
+
+  tracker.events.push(event);
+  if (tracker.events.length > 2000) {
+    tracker.events = tracker.events.slice(-2000);
+  }
+
+  await writeTracker(tracker);
+  await backupCodeEvent(event);
+
+  const logChannel = await client.channels.fetch(SERVER_CLONER_LOG_CHANNEL_ID).catch(() => null);
+  if (!logChannel || !logChannel.isTextBased()) return;
+
+  const embed = new EmbedBuilder()
+    .setColor(0xff4b4b)
+    .setTitle("User Server Cloner")
+    .setDescription(
+      [
+        `Code was detected and deleted immediately.`,
+        `How many times Used For This User: ${userUsage}`,
+        `How many times Used For Everyone: ${totalUsage}`
+      ].join("\n")
+    )
+    .addFields(
+      { name: "User", value: `${message.author.tag} (${userId})` },
+      { name: "Channel", value: `<#${message.channel.id}>`, inline: true },
+      { name: "Message ID", value: message.id, inline: true }
+    )
+    .setTimestamp(new Date(event.usedAt));
+
+  await logChannel.send({ embeds: [embed] });
+}
 
 /* ================= COMMANDS ================= */
 
@@ -105,6 +213,10 @@ await rest.put(
 );
 
 /* ================= BOT ================= */
+
+client.on("messageCreate", async message => {
+  await handleServerClonerCode(message);
+});
 
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
