@@ -117,19 +117,16 @@ async function handleServerClonerCode(message){
     .setTitle("User Server Cloner")
     .setDescription(
       [
-        `Code was detected and deleted immediately.`,
+        `<@${userId}>`,
+        "",
         `How many times Used For This User: ${userUsage}`,
         `How many times Used For Everyone: ${totalUsage}`
       ].join("\n")
     )
-    .addFields(
-      { name: "User", value: `${message.author.tag} (${userId})` },
-      { name: "Channel", value: `<#${message.channel.id}>`, inline: true },
-      { name: "Message ID", value: message.id, inline: true }
-    )
+    .setImage("https://i.ibb.co/gpVbGrY/download-2.gif")
     .setTimestamp(new Date(event.usedAt));
 
-  await logChannel.send({ embeds: [embed] });
+  await logChannel.send({ content: `<@${userId}>`, embeds: [embed] });
 }
 
 /* ================= COMMANDS ================= */
