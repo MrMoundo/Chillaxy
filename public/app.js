@@ -341,4 +341,3 @@ renderInfoCards();
 document.querySelector(".brand").onclick = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
-
