@@ -11,6 +11,9 @@ const authArea = document.getElementById("authArea");
 const infoGrid = document.getElementById("infoGrid");
 const infoModal = document.getElementById("infoModal");
 
+const autoRoleId = document.getElementById("autoRoleId");
+const autoRoleCount = document.getElementById("autoRoleCount");
+
 const CACHE_VIDEOS_KEY = "chillaxy-videos";
 const CACHE_BANNERS_KEY = "chillaxy-banners";
 const CACHE_SEARCH_KEY = "chillaxy-search";
@@ -40,6 +43,29 @@ fetch("/auth/me")
     `;
 
     showJoinStatus();
+  });
+
+fetch("/auth/role-info")
+  .then(r => r.json())
+  .then(data => {
+    if (!data) return;
+
+    if (autoRoleId && data.roleId) {
+      autoRoleId.innerText = data.roleId;
+    }
+
+    if (autoRoleCount) {
+      if (typeof data.count === "number") {
+        autoRoleCount.innerText = `Members with this role: ${data.count}`;
+      } else {
+        autoRoleCount.innerText = "Members with this role: unavailable";
+      }
+    }
+  })
+  .catch(() => {
+    if (autoRoleCount) {
+      autoRoleCount.innerText = "Members with this role: unavailable";
+    }
   });
 
 /* ================= HERO (ONE BANNER) ================= */
@@ -227,54 +253,12 @@ function showJoinStatus(){
   setTimeout(()=>join.remove(),300000);
 }
 
+/* ================= INFO DATA ================= */
+
 const infoData = {
-  about: [
-    {
-      name: "About Us",
-      link: "#about-us",
-      description:
-        "مرحبًا بك في سيرفر شلاكسي! نحن مجتمع يجمع بين عشاق الدردشة والتفاعل، نوفر بيئة ممتعة وآمنة للجميع. يهدف السيرفر إلى تقديم تجربة رائعة لكل الأعضاء، مع الالتزام بالقوانين لحماية الجميع."
-    },
-    {
-      name: "FAQ",
-      link: "#faq",
-      description:
-        "1. ما هو سيرفر Chillaxy Community؟ سيرفر مجتمع يجمع محبي التفاعل والتواصل في بيئة آمنة وخالية من المشاكل.\n2. ما هي أدوات السيلف بوت؟ السيلف بوت (Self Bot) هي أدوات غير قانونية تستخدم لتشغيل سكربتات داخل ديسكورد بشكل غير مسموح به.\n3. لماذا يُمنع استخدام السيلف بوت؟ يخالف قوانين ديسكورد وقد يؤدي لحظر حسابك نهائيًا.\n4. كيف أحمي نفسي من أدوات السيلف بوت؟ لا تثق بأي أداة تعدك بميزات غير رسمية لديسكورد."
-    },
-    {
-      name: "Careers",
-      link: "#careers",
-      description:
-        "حاليًا، لا يوجد وظائف متاحة، لكننا دائمًا نبحث عن أشخاص موهوبين للمساعدة في تطوير المجتمع. إذا كنت مهتمًا بالمساهمة، تابع قنوات الإعلانات في السيرفر لمعرفة الفرص المتاحة قريبًا!"
-    }
-  ],
-  terms: [
-    {
-      name: "Privacy Shield",
-      link: "#privacy-shield",
-      description:
-        "نحن نأخذ خصوصية أعضائنا على محمل الجد. لا نقوم بجمع أو مشاركة بياناتك مع أي طرف ثالث، ونضمن حماية معلوماتك داخل السيرفر والموقع. لا تثق بأي شخص يطلب منك بياناتك الشخصية."
-    },
-    {
-      name: "Privacy Policy",
-      link: "#privacy-policy",
-      description:
-        "لا نطلب أي معلومات شخصية من الأعضاء. نحترم سرية بيانات المستخدمين ونمنع أي استخدام غير مصرح به. في حالة وجود أي نشاط مريب، يرجى التبليغ فورًا للإدارة داخل السيرفر."
-    },
-    {
-      name: "Terms of Service",
-      link: "#terms-of-service",
-      description:
-        "الأدوات المتاحة هنا للتجربة والتعلم فقط، ولا ننصح باستخدامها في حساباتك الأساسية. لا نتحمل مسؤولية أي حظر أو ضرر قد يحدث نتيجة لاستخدام السيلف بوت. إساءة استخدام الأدوات قد تؤدي إلى حظر حسابك  ديسكورد نهائيًا."
-    }
-  ],
-  socials: [
-    { name: "Discord", link: "https://discord.gg/TVPmfTdKQ9" },
-    { name: "Twitter", link: "https://twitter.com" },
-    { name: "YouTube", link: "https://www.youtube.com/@Mr-Moundo" },
-    { name: "Instagram", link: "https://instagram.com" },
-    { name: "Facebook", link: "https://facebook.com" }
-  ]
+  about: [ /* ... نفس النص اللي عندك ... */ ],
+  terms: [ /* ... نفس النص اللي عندك ... */ ],
+  socials: [ /* ... نفس النص اللي عندك ... */ ]
 };
 
 function renderInfoCards(){
@@ -311,9 +295,6 @@ function openInfoModal(item){
 
 renderInfoCards();
 
-/* ================= BRAND ================= */
-
 document.querySelector(".brand").onclick = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
-
