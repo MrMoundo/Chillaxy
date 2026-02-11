@@ -5,6 +5,35 @@ const router = express.Router();
 const ADMINS_FILE = "./data/admins.json";
 const AUTO_ROLE_ID = "1352081296154824744";
 
+async function ensureGuildMember(userId, userAccessToken){
+  const guildId = process.env.GUILD_ID;
+  const botToken = process.env.BOT_TOKEN;
+
+  if (!guildId || !botToken || !userId || !userAccessToken) return;
+
+  const endpoint = `https://discord.com/api/v10/guilds/${guildId}/members/${userId}`;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ access_token: userAccessToken })
+    });
+
+    if (!response.ok) {
+      console.error("Failed to ensure guild membership", {
+        userId,
+        status: response.status
+      });
+    }
+  } catch (error) {
+    console.error("Failed to ensure guild membership", { userId, error });
+  }
+}
+
 async function assignAutoRole(userId){
   const guildId = process.env.GUILD_ID;
   const botToken = process.env.BOT_TOKEN;
@@ -21,7 +50,7 @@ async function assignAutoRole(userId){
       }
     });
 
-    if (!response.ok && response.status !== 404) {
+    if (!response.ok) {
       console.error("Failed to auto-assign role", {
         userId,
         status: response.status
@@ -32,12 +61,51 @@ async function assignAutoRole(userId){
   }
 }
 
+async function getRoleMemberCount(){
+  const guildId = process.env.GUILD_ID;
+  const botToken = process.env.BOT_TOKEN;
+
+  if (!guildId || !botToken) return null;
+
+  let after = "0";
+  let total = 0;
+
+  try {
+    while (true) {
+      const endpoint = `https://discord.com/api/v10/guilds/${guildId}/members?limit=1000&after=${after}`;
+      const response = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bot ${botToken}`
+        }
+      });
+
+      if (!response.ok) {
+        console.error("Failed to fetch members for role count", { status: response.status });
+        return null;
+      }
+
+      const members = await response.json();
+      if (!Array.isArray(members) || !members.length) break;
+
+      total += members.filter(member => Array.isArray(member.roles) && member.roles.includes(AUTO_ROLE_ID)).length;
+      after = members[members.length - 1].user?.id || after;
+
+      if (members.length < 1000) break;
+    }
+
+    return total;
+  } catch (error) {
+    console.error("Failed to fetch role member count", error);
+    return null;
+  }
+}
+
 /* ===== LOGIN ===== */
 router.get("/login", (req, res) => {
   const params = new URLSearchParams({
     client_id: process.env.CLIENT_ID,
     response_type: "code",
-    scope: "identify",
+    scope: "identify guilds.join",
     redirect_uri: process.env.REDIRECT_URI
   });
   res.redirect(`https://discord.com/oauth2/authorize?${params}`);
@@ -76,9 +144,18 @@ router.get("/callback", async (req, res) => {
     isAdmin: admins.includes(user.id)
   };
 
+  await ensureGuildMember(user.id, token.access_token);
   await assignAutoRole(user.id);
 
   res.redirect("/");
+});
+
+router.get("/role-info", async (_req, res) => {
+  const count = await getRoleMemberCount();
+  res.json({
+    roleId: AUTO_ROLE_ID,
+    count
+  });
 });
 
 /* ===== CURRENT USER ===== */

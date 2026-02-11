@@ -13,6 +13,10 @@ dotenv.config();
 
 const app = express();
 
+app.get("/dashboard.html", (_req, res) => {
+  res.status(404).send("Not Found");
+});
+
 app.use(express.json());
 app.use(express.static("public"));
 

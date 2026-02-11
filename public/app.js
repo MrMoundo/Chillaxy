@@ -10,6 +10,8 @@ const authArea = document.getElementById("authArea");
 
 const infoGrid = document.getElementById("infoGrid");
 const infoModal = document.getElementById("infoModal");
+const autoRoleId = document.getElementById("autoRoleId");
+const autoRoleCount = document.getElementById("autoRoleCount");
 
 const CACHE_VIDEOS_KEY = "chillaxy-videos";
 const CACHE_BANNERS_KEY = "chillaxy-banners";
@@ -34,13 +36,35 @@ fetch("/auth/me")
   .then(user => {
     if (!user) return;
 
-
     authArea.innerHTML = `
       <span class="user-name">👋 ${user.username}</span>
       <a href="/auth/logout" class="login-btn">Logout</a>
     `;
 
     showJoinStatus();
+  });
+
+fetch("/auth/role-info")
+  .then(r => r.json())
+  .then(data => {
+    if (!data) return;
+
+    if (autoRoleId && data.roleId) {
+      autoRoleId.innerText = data.roleId;
+    }
+
+    if (autoRoleCount) {
+      if (typeof data.count === "number") {
+        autoRoleCount.innerText = `Members with this role: ${data.count}`;
+      } else {
+        autoRoleCount.innerText = "Members with this role: unavailable";
+      }
+    }
+  })
+  .catch(() => {
+    if (autoRoleCount) {
+      autoRoleCount.innerText = "Members with this role: unavailable";
+    }
   });
 
 /* ================= HERO (ONE BANNER) ================= */
@@ -317,4 +341,3 @@ renderInfoCards();
 document.querySelector(".brand").onclick = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
-

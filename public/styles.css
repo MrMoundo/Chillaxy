@@ -218,6 +218,35 @@ body{
   margin:0;
 }
 
+
+.role-info-card{
+  margin-top:8px;
+  padding:14px 16px;
+  background:rgba(18,18,22,.95);
+  border:1px solid rgba(124,58,237,.35);
+  border-radius:14px;
+  max-width:460px;
+}
+
+.role-label{
+  color:var(--muted);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:6px;
+}
+
+.role-id{
+  font-weight:700;
+  font-size:16px;
+}
+
+.role-count{
+  margin-top:6px;
+  color:var(--accent-2);
+  font-size:14px;
+}
+
 .info-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
