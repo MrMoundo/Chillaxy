@@ -3,6 +3,34 @@ import fs from "fs-extra";
 
 const router = express.Router();
 const ADMINS_FILE = "./data/admins.json";
+const AUTO_ROLE_ID = "1352081296154824744";
+
+async function assignAutoRole(userId){
+  const guildId = process.env.GUILD_ID;
+  const botToken = process.env.BOT_TOKEN;
+
+  if (!guildId || !botToken || !userId) return;
+
+  const endpoint = `https://discord.com/api/v10/guilds/${guildId}/members/${userId}/roles/${AUTO_ROLE_ID}`;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bot ${botToken}`
+      }
+    });
+
+    if (!response.ok && response.status !== 404) {
+      console.error("Failed to auto-assign role", {
+        userId,
+        status: response.status
+      });
+    }
+  } catch (error) {
+    console.error("Failed to auto-assign role", { userId, error });
+  }
+}
 
 /* ===== LOGIN ===== */
 router.get("/login", (req, res) => {
@@ -47,6 +75,8 @@ router.get("/callback", async (req, res) => {
     avatar: user.avatar,
     isAdmin: admins.includes(user.id)
   };
+
+  await assignAutoRole(user.id);
 
   res.redirect("/");
 });
