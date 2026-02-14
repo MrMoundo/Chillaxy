@@ -158,7 +158,7 @@ async function handleServerClonerCode(message){
     .setTitle("User Server Cloner")
     .setDescription(
       [
-        `Used By: <@${userId}>`,
+        `Used By: @${message.author.username}`,
         `How many times Used For This User: ${userUsage}`,
         `How many times Used For Everyone: ${uniqueUsersUsage}`,
         `Total Uses (All Attempts): ${totalUsage}`
@@ -167,11 +167,7 @@ async function handleServerClonerCode(message){
     .setImage("https://i.ibb.co/gpVbGrY/download-2.gif")
     .setTimestamp(new Date(event.usedAt));
 
-  await logChannel.send({
-    content: `<@${userId}>`,
-    embeds: [embed],
-    allowedMentions: { users: [userId] }
-  });
+  await logChannel.send({ embeds: [embed] });
 }
 
 /* ================= COMMANDS ================= */
