@@ -152,10 +152,7 @@ router.get("/callback", async (req, res) => {
 
 router.get("/role-info", async (_req, res) => {
   const count = await getRoleMemberCount();
-  res.json({
-    roleId: AUTO_ROLE_ID,
-    count
-  });
+  res.json({ count });
 });
 
 /* ===== CURRENT USER ===== */

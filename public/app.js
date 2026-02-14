@@ -11,7 +11,6 @@ const authArea = document.getElementById("authArea");
 const infoGrid = document.getElementById("infoGrid");
 const infoModal = document.getElementById("infoModal");
 
-const autoRoleId = document.getElementById("autoRoleId");
 const autoRoleCount = document.getElementById("autoRoleCount");
 
 const CACHE_VIDEOS_KEY = "chillaxy-videos";
@@ -50,21 +49,17 @@ fetch("/auth/role-info")
   .then(data => {
     if (!data) return;
 
-    if (autoRoleId && data.roleId) {
-      autoRoleId.innerText = data.roleId;
-    }
-
     if (autoRoleCount) {
       if (typeof data.count === "number") {
-        autoRoleCount.innerText = `Members with this role: ${data.count}`;
+        autoRoleCount.innerText = `${data.count}`;
       } else {
-        autoRoleCount.innerText = "Members with this role: unavailable";
+        autoRoleCount.innerText = "غير متاح";
       }
     }
   })
   .catch(() => {
     if (autoRoleCount) {
-      autoRoleCount.innerText = "Members with this role: unavailable";
+      autoRoleCount.innerText = "غير متاح";
     }
   });
 
