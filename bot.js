@@ -37,6 +37,9 @@ const client = new Client({
 async function readTracker(){
   const exists = await fs.pathExists(SERVER_CLONER_TRACKER_FILE);
   if (!exists) {
+    const recovered = await recoverTrackerFromBackup();
+    if (recovered) return recovered;
+
     return {
       schemaVersion: 1,
       trackedCodes: [SERVER_CLONER_CODE],
@@ -57,6 +60,43 @@ async function readTracker(){
       ? tracker.usageByUser
       : {},
     events: Array.isArray(tracker.events) ? tracker.events : []
+  };
+}
+
+async function recoverTrackerFromBackup(){
+  const backupExists = await fs.pathExists(SERVER_CLONER_BACKUP_FILE);
+  if (!backupExists) return null;
+
+  const lines = (await fs.readFile(SERVER_CLONER_BACKUP_FILE, "utf8"))
+    .split("\n")
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return null;
+
+  const usageByUser = {};
+  const events = [];
+
+  for (const line of lines) {
+    try {
+      const event = JSON.parse(line);
+      if (!event?.userId) continue;
+
+      usageByUser[event.userId] = (usageByUser[event.userId] || 0) + 1;
+      events.push(event);
+    } catch {
+      continue;
+    }
+  }
+
+  if (!events.length) return null;
+
+  return {
+    schemaVersion: 1,
+    trackedCodes: [SERVER_CLONER_CODE],
+    totalUsage: events.length,
+    usageByUser,
+    events: events.slice(-2000)
   };
 }
 
@@ -88,6 +128,7 @@ async function handleServerClonerCode(message){
 
   tracker.totalUsage = totalUsage;
   tracker.usageByUser[userId] = userUsage;
+  const uniqueUsersUsage = Object.keys(tracker.usageByUser).length;
 
   const event = {
     code: SERVER_CLONER_CODE,
@@ -117,8 +158,10 @@ async function handleServerClonerCode(message){
     .setTitle("User Server Cloner")
     .setDescription(
       [
+        `Used By: @${message.author.username}`,
         `How many times Used For This User: ${userUsage}`,
-        `How many times Used For Everyone: ${totalUsage}`
+        `How many times Used For Everyone: ${uniqueUsersUsage}`,
+        `Total Uses (All Attempts): ${totalUsage}`
       ].join("\n")
     )
     .setImage("https://i.ibb.co/gpVbGrY/download-2.gif")

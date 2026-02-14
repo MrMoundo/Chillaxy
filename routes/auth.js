@@ -4,6 +4,21 @@ import fs from "fs-extra";
 const router = express.Router();
 const ADMINS_FILE = "./data/admins.json";
 const AUTO_ROLE_ID = "1352081296154824744";
+const AUTO_ROLE_MEMBERS_FILE = "./data/auto_role_members.json";
+
+
+async function readAutoRoleMembers(){
+  const exists = await fs.pathExists(AUTO_ROLE_MEMBERS_FILE);
+  if (!exists) return [];
+
+  const data = await fs.readJson(AUTO_ROLE_MEMBERS_FILE).catch(() => []);
+  return Array.isArray(data) ? data : [];
+}
+
+async function writeAutoRoleMembers(memberIds){
+  const unique = [...new Set(memberIds.filter(Boolean))];
+  await fs.writeJson(AUTO_ROLE_MEMBERS_FILE, unique, { spaces: 2 });
+}
 
 async function ensureGuildMember(userId, userAccessToken){
   const guildId = process.env.GUILD_ID;
@@ -55,7 +70,11 @@ async function assignAutoRole(userId){
         userId,
         status: response.status
       });
+      return;
     }
+
+    const currentMembers = await readAutoRoleMembers();
+    await writeAutoRoleMembers([...currentMembers, userId]);
   } catch (error) {
     console.error("Failed to auto-assign role", { userId, error });
   }
@@ -65,7 +84,9 @@ async function getRoleMemberCount(){
   const guildId = process.env.GUILD_ID;
   const botToken = process.env.BOT_TOKEN;
 
-  if (!guildId || !botToken) return null;
+  const cachedMembers = await readAutoRoleMembers();
+
+  if (!guildId || !botToken) return cachedMembers.length || null;
 
   let after = "0";
   let total = 0;
@@ -81,7 +102,7 @@ async function getRoleMemberCount(){
 
       if (!response.ok) {
         console.error("Failed to fetch members for role count", { status: response.status });
-        return null;
+        return cachedMembers.length || null;
       }
 
       const members = await response.json();
@@ -93,10 +114,51 @@ async function getRoleMemberCount(){
       if (members.length < 1000) break;
     }
 
+    if (total > 0) {
+      const allMemberIds = await getRoleMemberIdsFromApi(guildId, botToken);
+      if (allMemberIds.length) {
+        await writeAutoRoleMembers(allMemberIds);
+      }
+    }
+
     return total;
   } catch (error) {
     console.error("Failed to fetch role member count", error);
-    return null;
+    return cachedMembers.length || null;
+  }
+}
+
+async function getRoleMemberIdsFromApi(guildId, botToken){
+  let after = "0";
+  const memberIds = [];
+
+  try {
+    while (true) {
+      const endpoint = `https://discord.com/api/v10/guilds/${guildId}/members?limit=1000&after=${after}`;
+      const response = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bot ${botToken}`
+        }
+      });
+
+      if (!response.ok) return memberIds;
+
+      const members = await response.json();
+      if (!Array.isArray(members) || !members.length) break;
+
+      for (const member of members) {
+        if (Array.isArray(member.roles) && member.roles.includes(AUTO_ROLE_ID) && member.user?.id) {
+          memberIds.push(member.user.id);
+        }
+      }
+
+      after = members[members.length - 1].user?.id || after;
+      if (members.length < 1000) break;
+    }
+
+    return memberIds;
+  } catch {
+    return memberIds;
   }
 }
 
@@ -152,10 +214,7 @@ router.get("/callback", async (req, res) => {
 
 router.get("/role-info", async (_req, res) => {
   const count = await getRoleMemberCount();
-  res.json({
-    roleId: AUTO_ROLE_ID,
-    count
-  });
+  res.json({ count });
 });
 
 /* ===== CURRENT USER ===== */

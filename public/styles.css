@@ -228,23 +228,12 @@ body{
   max-width:460px;
 }
 
-.role-label{
-  color:var(--muted);
-  font-size:12px;
-  text-transform:uppercase;
-  letter-spacing:1px;
-  margin-bottom:6px;
-}
 
-.role-id{
-  font-weight:700;
-  font-size:16px;
-}
 
 .role-count{
-  margin-top:6px;
   color:var(--accent-2);
-  font-size:14px;
+  font-size:28px;
+  font-weight:800;
 }
 
 .info-grid{
@@ -675,4 +664,34 @@ body{
 @keyframes floatIn{
   from{transform:translateY(20px);opacity:0}
   to{transform:translateY(0);opacity:1}
+}
+
+
+.site-footer{
+  border-top:1px solid var(--border);
+  margin-top:30px;
+  padding:24px 40px 36px;
+  background:rgba(10,10,14,.7);
+}
+
+.footer-columns{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:24px;
+}
+
+.footer-columns h3{
+  margin:0 0 10px;
+  font-size:16px;
+}
+
+.footer-columns a{
+  display:block;
+  color:var(--muted);
+  text-decoration:none;
+  margin:7px 0;
+}
+
+.footer-columns a:hover{
+  color:var(--accent-2);
 }

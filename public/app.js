@@ -11,7 +11,6 @@ const authArea = document.getElementById("authArea");
 const infoGrid = document.getElementById("infoGrid");
 const infoModal = document.getElementById("infoModal");
 
-const autoRoleId = document.getElementById("autoRoleId");
 const autoRoleCount = document.getElementById("autoRoleCount");
 
 const CACHE_VIDEOS_KEY = "chillaxy-videos";
@@ -50,21 +49,17 @@ fetch("/auth/role-info")
   .then(data => {
     if (!data) return;
 
-    if (autoRoleId && data.roleId) {
-      autoRoleId.innerText = data.roleId;
-    }
-
     if (autoRoleCount) {
       if (typeof data.count === "number") {
-        autoRoleCount.innerText = `Members with this role: ${data.count}`;
+        autoRoleCount.innerText = `${data.count}`;
       } else {
-        autoRoleCount.innerText = "Members with this role: unavailable";
+        autoRoleCount.innerText = "0";
       }
     }
   })
   .catch(() => {
     if (autoRoleCount) {
-      autoRoleCount.innerText = "Members with this role: unavailable";
+      autoRoleCount.innerText = "0";
     }
   });
 
@@ -256,9 +251,32 @@ function showJoinStatus(){
 /* ================= INFO DATA ================= */
 
 const infoData = {
-  about: [ /* ... نفس النص اللي عندك ... */ ],
-  terms: [ /* ... نفس النص اللي عندك ... */ ],
-  socials: [ /* ... نفس النص اللي عندك ... */ ]
+  about: [
+    {
+      name: "About Chillaxy",
+      description: "Chillaxy provides curated premium video content for the community.",
+      link: "https://discord.gg/TVPmfTdKQ9"
+    }
+  ],
+  terms: [
+    {
+      name: "Privacy Policy",
+      description: "How user data is collected and handled.",
+      link: "#"
+    },
+    {
+      name: "Terms of Service",
+      description: "Rules and conditions for using Chillaxy.",
+      link: "#"
+    }
+  ],
+  socials: [
+    { name: "Discord", description: "Join our Discord community.", link: "https://discord.gg/TVPmfTdKQ9" },
+    { name: "Twitter", description: "Follow updates on X / Twitter.", link: "https://twitter.com" },
+    { name: "YouTube", description: "Watch clips and videos.", link: "https://youtube.com" },
+    { name: "Instagram", description: "See posts and stories.", link: "https://instagram.com" },
+    { name: "Facebook", description: "Stay connected on Facebook.", link: "https://facebook.com" }
+  ]
 };
 
 function renderInfoCards(){
